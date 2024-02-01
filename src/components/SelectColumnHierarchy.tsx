@@ -39,7 +39,7 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({ columns, on
                     <SelectLGDLevel
                         levels={levels}
                         column={col}
-                        value={hierarchy[col].name}
+                        value={hierarchy[col]?.name}
                         onChange={(v: string) => handleChange(col, v)}
                         key={col}
                     />

@@ -14,6 +14,8 @@ export const FileUpload: FC<FileUploaderProps> = ({ onFileLoad }) => {
             const file = fileList[0];
             console.log(file)
             const df = await dfd.readCSV(file);
+            // @ts-ignore
+            window.df = df;
             console.log(df)
             onFileLoad(df);
         }
