@@ -15,10 +15,11 @@ export const getLevels = async () => {
 
 type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";
 
-export const getMatches = async (name: string, level_name: LevelName) => {
+export const getMatches = async (name: string, level_name: LevelName, parent_id: number | null = null) => {
   const res = await axiosInstance.post("/match/entity", {
     name,
-    level_id: level_name,
+    level: level_name,
+    parent_id
   });
   return res.data;
 }
