@@ -6,7 +6,9 @@ import type { Hierarchy } from "./components/SelectColumnHierarchy";
 import { DirectedGraph } from "graphology";
 import { buildLGDGraph } from "./services/graph";
 import { Explorer } from "./components/Explorer";
-import { lgdMapGraph } from "./services/lgd";
+import { computeUnmatchedChildren, lgdMapGraph } from "./services/lgd";
+import { EntityView } from "./components/Entity";
+
 
 export type AppState =
   | "initial"
@@ -36,9 +38,10 @@ function App() {
     setGraph(lgdGraph);
 
     (async () => {
-      const mappedGraph = await lgdMapGraph(lgdGraph);
+      let mappedGraph = await lgdMapGraph(lgdGraph);
+      mappedGraph = computeUnmatchedChildren(mappedGraph);
       setGraph(mappedGraph.copy());
-    })();
+    })()
   }, [df, lgdCols, hierarchy]);
 
   return (
@@ -72,9 +75,7 @@ function App() {
           </div>
           <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
             {node !== null && graph !== null && (
-              <pre>
-                {JSON.stringify(graph.getNodeAttributes(node), null, 2)}
-              </pre>
+              <EntityView node={node} graph={graph} setGraph={setGraph}/>
             )}
           </div>
         </main>

@@ -8,6 +8,7 @@ interface ExplorerProps {
   setActiveNode: (node: string) => void;
 }
 
+
 export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
   const renderNodes = (node: string): JSX.Element => {
     let neighbors: any = graph.outNeighbors(node);
@@ -23,9 +24,18 @@ export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
       </ExplorerItem>
     );
   };
-
+        
   const rootNodes = getRootNodes(graph);
-  return <div>{rootNodes.map((root) => renderNodes(root))}</div>;
+  return (
+    <div>
+        <div>
+            {"(matches) [number of unmatched children]"}
+        </div>
+        <div>
+        {rootNodes.map(root => renderNodes(root))}
+        </div>
+    </div>
+  )
 };
 
 interface ExplorerItemProps {
@@ -50,25 +60,18 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
     } else {
       return "green";
     }
-  };
-
+  }
+  
   const renderText = (
     <span>
       {attrs.title}
       {hasMatches && (
         <span style={{ color: getMatchColor(numMatches) }}>({numMatches})</span>
       )}
+      <span>{attrs?.unmatchedChildren ? `[${attrs.unmatchedChildren}]` : "" }</span>
     </span>
   );
 
-  //   const renderText = `${attrs.title}${hasMatches ? `(${matches.length})` : ""}`;
-
-  /* const renderText = (
-    <span style={{ color: getTextColor() }}>
-      {attrs.title}
-      {hasMatches && `(${matches.length})`}
-    </span>
-  ); */
 
   if (children?.length === 0) {
     return (
