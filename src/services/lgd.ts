@@ -2,7 +2,7 @@ import { DirectedGraph } from "graphology";
 import { getMatches } from "../api";
 
 
-const getParentNode = (node: string, graph: DirectedGraph) => {
+export const getParentNode = (node: string, graph: DirectedGraph) => {
     const parentNodes = graph.inNeighbors(node);
     if (parentNodes.length === 0) {
         return null;
@@ -14,7 +14,7 @@ const getParentNode = (node: string, graph: DirectedGraph) => {
     return parent;
 }
 
-const getParentNodeId = (node: string, graph: DirectedGraph) => {
+export const getParentNodeId = (node: string, graph: DirectedGraph) => {
     const parent = getParentNode(node, graph);
     if (parent === null) {
         return null;
@@ -24,6 +24,26 @@ const getParentNodeId = (node: string, graph: DirectedGraph) => {
         return attrs.match.id;
     }
     return null;
+}
+
+const countUnmatchedChildren = (node: string, graph: DirectedGraph): number => {
+    const children = graph.outNeighbors(node);
+    const count = children.reduce((acc, child) => {
+        const nodeHasAMatch = !!graph.getNodeAttribute(child, "match")
+        if (nodeHasAMatch) {
+            return acc + countUnmatchedChildren(child, graph)
+        }
+        return acc + 1 + countUnmatchedChildren(child, graph)
+    }, 0)
+    return count
+}
+
+export const computeUnmatchedChildren = (graph: DirectedGraph) => {
+    for (const node of graph.nodes()) {
+        const unmatchedChildren = countUnmatchedChildren(node, graph);
+        graph.mergeNodeAttributes(node, { unmatchedChildren });
+    }
+    return graph
 }
 
 export const lgdMapGraph = async (graph: DirectedGraph) => {
@@ -40,5 +60,6 @@ export const lgdMapGraph = async (graph: DirectedGraph) => {
             });
         }
     }
+
     return graph
 }
