@@ -8,6 +8,7 @@ interface ExplorerProps {
     setActiveNode: (node: string) => void;
 }
 
+
 export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
     const renderNodes = (node: string): JSX.Element => {
         let neighbors: any = graph.outNeighbors(node);
@@ -23,7 +24,12 @@ export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
     const rootNodes = getRootNodes(graph);
     return (
         <div>
+            <div>
+                {"(matches) [number of unmatched children]"}
+            </div>
+            <div>
             {rootNodes.map(root => renderNodes(root))}
+            </div>
         </div>
     )
 }
@@ -38,7 +44,7 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({  onClick, attrs, children 
     const hasMatches = !!attrs?.matches;
     const matches = attrs?.matches;
 
-    const renderText = `${attrs.title}${hasMatches ? `(${matches.length})` : ""}`
+    const renderText = `${attrs.title} ${hasMatches ? `(${matches.length})` : ""}${attrs?.unmatchedChildren ? `[${attrs.unmatchedChildren}]` : "" }`
 
     if (children?.length === 0) {
         return <div className="ml-4" onClick={onClick}>{renderText}</div>
