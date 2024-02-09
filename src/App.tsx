@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react"
-import { FileUpload } from "./components/FileUpload"
+import { useEffect, useState } from "react";
+import { FileUpload } from "./components/FileUpload";
 import SelectLGDCols from "./components/SelectLGDCols";
 import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy";
 import type { Hierarchy } from "./components/SelectColumnHierarchy";
@@ -10,8 +10,16 @@ import { computeUnmatchedChildren, lgdMapGraph } from "./services/lgd";
 import { EntityView } from "./components/Entity";
 
 
+export type AppState =
+  | "initial"
+  | "loading-csv"
+  | "fetching"
+  | "selecting-lgd-cols"
+  | "selecting-hierarchy"
+  | "csv-loaded";
 
 function App() {
+  // const [state, setState] = useState<AppState>("initial");
   const [df, setDF] = useState<any | null>(null);
   const [lgdCols, setLGDCols] = useState<string[]>([]);
   const [hierarchy, setHierarchy] = useState<Hierarchy | null>(null);
@@ -21,7 +29,7 @@ function App() {
   const isHierarchySet = () => !!df && lgdCols.length > 0 && !!hierarchy;
   useEffect(() => {
     if (!isHierarchySet()) {
-      return
+      return;
     }
     // @ts-ignore
     const lgdGraph = buildLGDGraph(df, hierarchy);
@@ -38,25 +46,42 @@ function App() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold underline">LGD Mapper</h1>
-      <main className="grid grid-cols-3 gap-1">
-        <div className="bg-stone-200  ">
-          <FileUpload onFileLoad={setDF} />
-          {df !== null && <SelectLGDCols columns={df.columns} selectedCols={lgdCols} onSelectionChange={setLGDCols} />}
-          {lgdCols.length > 0 && <SelectColumnHierarchy columns={lgdCols} onHierarchyChange={setHierarchy} />}
-        </div>
-        <div className="bg-stone-200">
-          {/* @ts-ignore */}
-          {isHierarchySet() && graph !== null && <Explorer graph={graph} setActiveNode={setNode} />}
-        </div>
-        <div className="bg-stone-200">
-          {node !== null && graph !== null && (
-            <EntityView node={node} graph={graph} setGraph={setGraph}/>
-          )}
-        </div>
-      </main>
+      <div className="bg-gray-300">
+        <h1 className="text-3xl font-bold underline flex justify-center">
+          LGD Mapper
+        </h1>
+        <main className="grid grid-cols-3 gap-3 mt-2 mx-2">
+          <div className=" bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+            <FileUpload onFileLoad={setDF} /* setUIState={setState} */ />
+            {df !== null && (
+              <SelectLGDCols
+                columns={df.columns}
+                selectedCols={lgdCols}
+                onSelectionChange={setLGDCols}
+              />
+            )}
+            {lgdCols.length > 0 && (
+              <SelectColumnHierarchy
+                columns={lgdCols}
+                onHierarchyChange={setHierarchy}
+              />
+            )}
+          </div>
+          <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+            {/* @ts-ignore */}
+            {isHierarchySet() && graph !== null && (
+              <Explorer graph={graph} setActiveNode={setNode} />
+            )}
+          </div>
+          <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+            {node !== null && graph !== null && (
+              <EntityView node={node} graph={graph} setGraph={setGraph}/>
+            )}
+          </div>
+        </main>
+      </div>
     </>
-  )
+  );
 }
 
-export default App
+export default App;
