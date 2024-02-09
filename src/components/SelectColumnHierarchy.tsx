@@ -2,16 +2,18 @@ import { FC, useState, useEffect } from "react";
 import { getLevels } from "../api";
 import { ILGDLevel } from "../types";
 
-
 export type Hierarchy = { [lgdCol: string]: any };
 interface SelectColHierarchyProps {
   columns: string[];
   onHierarchyChange: (hierarchy: Hierarchy) => void;
 }
 
-export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({ columns, onHierarchyChange }) => {
-    const [levels, setLevels] = useState<ILGDLevel[]>([]);
-    const [hierarchy, setHierarchy] = useState<Hierarchy>({});
+export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
+  columns,
+  onHierarchyChange,
+}) => {
+  const [levels, setLevels] = useState<ILGDLevel[]>([]);
+  const [hierarchy, setHierarchy] = useState<Hierarchy>({});
 
   useEffect(() => {
     (async () => {
@@ -52,7 +54,7 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({ columns, on
 };
 
 interface SelectLGDLevelProps {
-  levels: LGDLevel[];
+  levels: ILGDLevel[];
   column: string;
   value: string;
   onChange: (value: string) => void;
