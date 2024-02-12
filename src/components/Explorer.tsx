@@ -8,7 +8,6 @@ interface ExplorerProps {
   setActiveNode: (node: string) => void;
 }
 
-
 export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
   const renderNodes = (node: string): JSX.Element => {
     let neighbors: any = graph.outNeighbors(node);
@@ -24,18 +23,14 @@ export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
       </ExplorerItem>
     );
   };
-        
+
   const rootNodes = getRootNodes(graph);
   return (
     <div>
-        <div>
-            {"(matches) [number of unmatched children]"}
-        </div>
-        <div>
-        {rootNodes.map(root => renderNodes(root))}
-        </div>
+      <div>{"(matches) [number of unmatched children]"}</div>
+      <div>{rootNodes.map((root) => renderNodes(root))}</div>
     </div>
-  )
+  );
 };
 
 interface ExplorerItemProps {
@@ -54,24 +49,25 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
 
   const getMatchColor = (numMatches: number): string => {
     if (numMatches === 0) {
-      return "blue";
+      return "inline-flex items-center justify-center w-5 h-5 text-sm text-blue-500 bg-blue-100 border border-blue-500 rounded-full mx-1";
     } else if (numMatches === 1) {
-      return "red";
+      return "inline-flex items-center justify-center w-5 h-5 text-sm text-red-500 bg-red-100 border border-red-500 rounded-full mx-1";
     } else {
-      return "green";
+      return "inline-flex items-center justify-center w-5 h-5 text-sm text-green-500 bg-green-100 border border-green-500 rounded-full mx-1";
     }
-  }
-  
+  };
+
   const renderText = (
     <span>
       {attrs.title}
       {hasMatches && (
-        <span style={{ color: getMatchColor(numMatches) }}>({numMatches})</span>
+        <span className={getMatchColor(numMatches)}>{numMatches}</span>
       )}
-      <span>{attrs?.unmatchedChildren ? `[${attrs.unmatchedChildren}]` : "" }</span>
+      <span className={getMatchColor(attrs?.unmatchedChildren?.length || 0)}>
+        {attrs?.unmatchedChildren ? `${attrs.unmatchedChildren}` : ""}
+      </span>
     </span>
   );
-
 
   if (children?.length === 0) {
     return (
@@ -82,8 +78,10 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
   }
 
   return (
-    <details className="ml-4 border-b-1 border-gray-600">
-      <summary onClick={onClick}>{renderText}</summary>
+    <details className="ml-4 border-b-[1px] border-gray-500">
+      <summary className="" onClick={onClick}>
+        {renderText}
+      </summary>
       {children}
     </details>
   );
