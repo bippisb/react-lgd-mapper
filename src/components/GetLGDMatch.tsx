@@ -4,6 +4,7 @@ import { ILGDLevel, ILGDMatch, LevelName } from "../types";
 import { MatchesTableView } from "./MatchesTableView";
 
 interface GetLGDMatchComponentProps {
+  node?: string;
   parent_id: number; // parent's entity id
   level: string; // level name
   title: string;
@@ -21,6 +22,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
   title,
   level,
   parent_id,
+  node = "",
   onSelect,
 }) => {
   const [show, setShow] = useState(false);
@@ -38,7 +40,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
       level_id,
       useParent
     } = state;
-    const lvl = levels.find(v => v.id === Number(level_id));
+    const lvl = levels.find(v => v.name === level_id);
     console.log(lvl, level_id)
     const level_name = lvl?.name as LevelName;
     const parentArg = useParent ? parent_id : null;
@@ -55,6 +57,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     if (key === "useParent") {
       value = value === "on";
     }
+    console.log(key, value);
     setState(state => ({
       ...state,
       [key]: value,
@@ -86,14 +89,14 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
         show && (
           <div>
             <div>
-              <input type="text" onChange={handleChange} value={state.title} name="title" />
+              <input type="text" id={node + "title"} onChange={handleChange} value={state.title} name="title" />
               {!!parent_id && (
                 <div>
-                  <input type="checkbox" onChange={handleChange} checked={state.useParent} name="useParent" />
+                  <input type="checkbox" id={node + "useparent"} onChange={handleChange} checked={state.useParent} name="useParent" />
                   <label htmlFor="useParent">Parent Id ({parent_id})</label>
                 </div>
               )}
-              <select onChange={handleChange} value={state.level_id} name="level">
+              <select onChange={handleChange} id={node + "level"} value={state.level_id} name="level_id">
                 <option>Without Level</option>
                 {
                   levels.map(l => (
