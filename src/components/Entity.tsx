@@ -4,6 +4,7 @@ import { ILGDMatch } from "../types";
 import { GetLGDMatchComponent } from "./GetLGDMatch";
 import { getParentNodeId } from "../services/lgd";
 import { MatchesTableView } from "./MatchesTableView";
+import { AddVariation } from "./AddVariation";
 
 interface EntityViewProps {
   setGraph: (g: DirectedGraph) => void;
@@ -37,6 +38,9 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
       />
       <h5>Final Match</h5>
       <pre>{JSON.stringify(attrs?.match, null, 2)}</pre>
+      {
+        attrs?.match && (<AddVariation node={node} entity_id={attrs.match.id} variation={attrs.title} />)
+      }
     </div>
   );
 };

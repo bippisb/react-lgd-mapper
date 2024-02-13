@@ -22,4 +22,11 @@ export const getMatches = async (name: string, level_name: LevelName, parent_id:
   return res.data;
 }
 
+export const addVariation = async (variation: string, entity_id: number) => {
+  const res = await axiosInstance.post("/add/variation", {
+    variation, entity_id
+  })
+  return res.data
+}
+
 export default axiosInstance;
