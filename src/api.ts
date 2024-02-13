@@ -1,4 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
+import { LevelName } from './types';
 
 const baseURL = 'http://localhost:8000';
 
@@ -11,9 +12,6 @@ export const getLevels = async () => {
   const res = await axiosInstance.get("/levels")
   return res.data.filter((l: any) => l.name !== "india")
 }
-
-
-type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";
 
 export const getMatches = async (name: string, level_name: LevelName, parent_id: number | null = null) => {
   const res = await axiosInstance.post("/match/entity", {
