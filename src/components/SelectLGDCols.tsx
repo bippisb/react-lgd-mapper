@@ -12,7 +12,7 @@ const SelectLGDCols: FC<SelectLGDColsProps> = ({
   onSelectionChange,
 }) => {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { value, checked } = e.target;
+    const { value, checked } = e.currentTarget;
     if (checked) {
       onSelectionChange([...selectedCols, value]);
     } else {
