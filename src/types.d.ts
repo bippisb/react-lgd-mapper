@@ -22,3 +22,5 @@ export interface ILGDLevel {
     name: string;
     id: number;
 }
+
+export type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";
