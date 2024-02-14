@@ -60,12 +60,15 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
   const renderText = (
     <span>
       {attrs.title}
-      {hasMatches && (
+      {hasMatches && attrs.matches.length > 1 && (
         <span className={getMatchColor(numMatches)}>{numMatches}</span>
       )}
-      <span className={getMatchColor(attrs?.unmatchedChildren?.length || 0)}>
-        {attrs?.unmatchedChildren ? `${attrs.unmatchedChildren}` : ""}
-      </span>
+      {attrs?.unmatchedChildren > 0 && (
+        <span className={getMatchColor(attrs?.unmatchedChildren?.length || 0)}>
+          {attrs.unmatchedChildren}
+        </span>
+      )
+      }
     </span>
   );
 
