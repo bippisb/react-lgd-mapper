@@ -1,6 +1,7 @@
 import { FC, useState, useEffect } from "react";
 import { getLevels } from "../api";
 import { ILGDLevel } from "../types";
+import { useLevelsStore } from "./store";
 
 export type Hierarchy = { [lgdCol: string]: any };
 interface SelectColHierarchyProps {
@@ -12,7 +13,11 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
   columns,
   onHierarchyChange,
 }) => {
-  const [levels, setLevels] = useState<ILGDLevel[]>([]);
+  const { levels, setLevels } = useLevelsStore((state) => ({
+    levels: state.levels,
+    setLevels: state.setLevels,
+  }));
+
   const [hierarchy, setHierarchy] = useState<Hierarchy>({});
 
   useEffect(() => {
@@ -44,7 +49,7 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
           />
         ))}
       <button
-        className="mt-2 ml-24 bg-gray-800 border-gray-300 text-white rounded-md p-1"
+        className="mt-2 ml-24 bg-gray-700 border-gray-300 text-white rounded-md p-1 hover:bg-gray-600"
         onClick={handleSubmit}
       >
         Start Mapping

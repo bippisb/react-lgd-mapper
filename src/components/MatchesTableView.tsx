@@ -1,4 +1,4 @@
-import { List, ListItem, Radio, Typography } from "@material-tailwind/react";
+import { Radio, Typography } from "@material-tailwind/react";
 import { ILGDMatch } from "../types";
 import { FC } from "react";
 import MatchListItem from "./MatchListItem";
@@ -37,14 +37,6 @@ export const MatchesTableView: FC<MatchesTableViewProps> = ({
         <div className="ml-6 -mt-2">
           <MatchListItem match={m} />
         </div>
-        {/* <div className="ml-6 -mt-2">
-          <List className="block" placeholder={undefined}>
-            <ListItem placeholder={undefined}>Enitity Id - {m.id}</ListItem>
-            <ListItem placeholder={undefined}>LGD Code - {m.code}</ListItem>
-            <ListItem placeholder={undefined}>Level Name - {m.level}</ListItem>
-            <ListItem placeholder={undefined}>Level Id - {m.level_id}</ListItem>
-          </List>
-        </div> */}
       </div>
     ))}
   </div>
