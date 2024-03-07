@@ -32,23 +32,31 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
   const handleSubmit = () => onHierarchyChange(hierarchy);
 
   return (
-    <div className="m-2">
-      {levels.length > 0 &&
-        columns.map((col) => (
-          <SelectLGDLevel
-            levels={levels}
-            column={col}
-            value={hierarchy[col]?.name}
-            onChange={(v: string) => handleChange(col, v)}
-            key={col}
-          />
-        ))}
-      <button
-        className="mt-2 ml-24 bg-gray-800 border-gray-300 text-white rounded-md p-1"
-        onClick={handleSubmit}
-      >
-        Start Mapping
-      </button>
+    <div>
+      <hr className="border-gray-600 border-1 my-1"/>
+      <h3>Column Hierarchy</h3>
+      <div className="p-2">
+        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400 align-bottom text-xs">
+          <span>Column Name</span>
+          <span>Administrative Level</span>
+        </div>
+        {levels.length > 0 &&
+          columns.map((col) => (
+            <SelectLGDLevel
+              levels={levels}
+              column={col}
+              value={hierarchy[col]?.name}
+              onChange={(v: string) => handleChange(col, v)}
+              key={col}
+            />
+          ))}
+        <button
+          className="m-4 float-right bg-gray-600 border-gray-700 border-2 text-white hover:text-gray-700 hover:bg-gray-100  rounded-md py-1 px-4"
+          onClick={handleSubmit}
+        >
+          Start Mapping
+        </button>
+      </div>
     </div>
   );
 };
@@ -68,14 +76,14 @@ export const SelectLGDLevel: FC<SelectLGDLevelProps> = ({
 }) => {
   const name = `lgdLevel${column}`;
   return (
-    <div className="py-1 flex justify-between">
-      <label htmlFor={name}>{column}</label>
+    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400">
+      <label htmlFor={name} className="align-middle">{column}</label>
 
       <select
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mr-14"
+        className="float-right"
       >
         <option className="bg-gray-300" value="" defaultValue={value}>
           Level
