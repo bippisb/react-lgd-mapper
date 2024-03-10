@@ -1,50 +1,27 @@
-import { List, ListItem, Radio, Typography } from "@material-tailwind/react";
 import { ILGDMatch } from "../types";
 import { FC } from "react";
 import MatchListItem from "./MatchListItem";
 
 export interface MatchesTableViewProps {
   matches: ILGDMatch[];
-  node: string;
-  onSelect: (m: ILGDMatch) => void;
+  node?: string;
+  onSelect?: (m: ILGDMatch) => void;
+  match?: ILGDMatch
 }
 
 export const MatchesTableView: FC<MatchesTableViewProps> = ({
+  match,
   matches,
-  node,
-  onSelect,
+  onSelect = () => {},
 }) => (
-  <div>
+  <div className="flex flex-col gap-2">
     {matches.map((m) => (
       <div
         key={m.id}
-        className="border-gray-300 border-2 p-1 rounded-lg"
         onClick={() => onSelect(m)}
+        className={match?.id === m.id ? "outline outline-offset-2 outline-blue-800" : ""}
       >
-        <Radio
-          label={
-            <Typography
-              className="uppercase font-extrabold ml-3 "
-              placeholder={undefined}
-            >
-              {" "}
-              {m.name}
-            </Typography>
-          }
-          crossOrigin={undefined}
-          className="checked:accent-gray-500"
-        />
-        <div className="ml-6 -mt-2">
-          <MatchListItem match={m} />
-        </div>
-        {/* <div className="ml-6 -mt-2">
-          <List className="block" placeholder={undefined}>
-            <ListItem placeholder={undefined}>Enitity Id - {m.id}</ListItem>
-            <ListItem placeholder={undefined}>LGD Code - {m.code}</ListItem>
-            <ListItem placeholder={undefined}>Level Name - {m.level}</ListItem>
-            <ListItem placeholder={undefined}>Level Id - {m.level_id}</ListItem>
-          </List>
-        </div> */}
+        <MatchListItem match={m} />
       </div>
     ))}
   </div>
