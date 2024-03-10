@@ -1,5 +1,6 @@
 import { DirectedGraph } from "graphology";
-import { getMatches } from "../api";
+import { getBatchedMatches, getMatches } from "../api";
+import { LevelName } from "../types";
 
 
 export const getParentNode = (node: string, graph: DirectedGraph) => {
@@ -60,6 +61,49 @@ export const lgdMapGraph = async (graph: DirectedGraph) => {
             });
         }
     }
-
     return graph
+}
+
+export const lgdMapInBatches = async (
+    graph: DirectedGraph,
+    levelNames: LevelName[],
+    batchSize = 100,
+    onProgress: (percentage: number) => void = () => { }
+) => {
+    const nodeIsOfLevel = (l: LevelName) => (n: string) => {
+        const attrs = graph.getNodeAttributes(n);
+        return attrs.level_name === l && !attrs?.matches;
+    }
+    console.log("inbaches")
+    let nFetched = 0;
+    for (const levelName of levelNames) {
+        console.log(levelName)
+        const nodes = graph.filterNodes(nodeIsOfLevel(levelName));
+        for (let i = 0; i < nodes.length; i += batchSize) {
+            const batch = nodes.slice(i, i + batchSize);
+            const payload = batch.map(node => {
+                const { title, level_name } = graph.getNodeAttributes(node);
+                const parent_id = getParentNodeId(node, graph);
+
+                return {
+                    name: Boolean(title) ? title : "",
+                    level: level_name,
+                    parent_id,
+                }
+            })
+            const matches = await getBatchedMatches(payload);
+            for (let j = 0; j < batch.length; j++) {
+                const n = batch[j];
+                const m = matches[j];
+                graph.mergeNodeAttributes(n, {
+                    matches: m,
+                    match: m?.length === 1 ? m[0] : undefined,
+                });
+            }
+            nFetched = i + batch.length;
+            onProgress(nFetched / graph.order);
+        }
+    }
+
+    return graph;
 }
