@@ -1,13 +1,15 @@
-import { useEffect, useState } from "react";
-import { FileUpload } from "./components/FileUpload";
+import { ChangeEvent, useEffect, useState } from "react";
+import { DatasetUpload } from "./components/DatasetUpload";
 import SelectLGDCols from "./components/SelectLGDCols";
 import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy";
-import type { Hierarchy } from "./components/SelectColumnHierarchy";
-import { DirectedGraph } from "graphology";
 import { buildLGDGraph } from "./services/graph";
-import { Explorer } from "./components/Explorer";
-import { computeUnmatchedChildren, lgdMapGraph } from "./services/lgd";
+import { computeUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
 import { EntityView } from "./components/Entity";
+import { LazyExplorer } from "./components/LazyExplorer";
+import { Notes } from "./components/Notes";
+import { getUniqueRecords } from "./services/pyodide-worker";
+import { exportAppState, exportMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
+import { FileUpload } from "./components/FileUpload";
 
 
 export type AppState =
@@ -19,45 +21,102 @@ export type AppState =
   | "csv-loaded";
 
 function App() {
-  // const [state, setState] = useState<AppState>("initial");
-  const [df, setDF] = useState<any | null>(null);
-  const [lgdCols, setLGDCols] = useState<string[]>([]);
-  const [hierarchy, setHierarchy] = useState<Hierarchy | null>(null);
-  const [graph, setGraph] = useState<DirectedGraph | null>(null);
-  const [node, setNode] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const appState = useAppState();
+  const graphState = useGraph();
 
-  const isHierarchySet = () => !!df && lgdCols.length > 0 && !!hierarchy;
+  const {
+    columns, setColumns,
+    lgdCols, setLgdCols,
+    mappingProgress, setMappingProgress,
+    hierarchy, setHierarchy,
+    activeNode, setActiveNode,
+    resetState,
+  } = appState;
+  const { graph, setGraph } = graphState;
+
+  const importAppState = async (e: ChangeEvent<HTMLInputElement>) => {
+    const fileList = e.target.files;
+
+    if (fileList && fileList.length > 0) {
+      const file = fileList[0];
+      loadAppState(file, appState, graphState);
+    }
+  }
+
   useEffect(() => {
-    if (!isHierarchySet()) {
+    if (!file || lgdCols.length === 0 || !hierarchy) {
       return;
     }
-    // @ts-ignore
-    const lgdGraph = buildLGDGraph(df, hierarchy);
-    // @ts-ignore
-    window.graph = lgdGraph;
-    setGraph(lgdGraph);
 
     (async () => {
-      let mappedGraph = await lgdMapGraph(lgdGraph);
-      mappedGraph = computeUnmatchedChildren(mappedGraph);
-      setGraph(mappedGraph.copy());
-    })()
-  }, [df, lgdCols, hierarchy]);
+      const records = await getUniqueRecords(file, lgdCols);
+      console.log("loaded records", records.length)
+      const lgdGraph = buildLGDGraph(records, hierarchy);
+      console.log("built graph")
+      setGraph(lgdGraph)
+    })();
+  }, [file, lgdCols, hierarchy]);
+
+  const startMapping = async () => {
+    if (graph === null || hierarchy === null) {
+      return
+    }
+    let mappedGraph = await lgdMapInBatches(
+      graph,
+      Object.values(hierarchy).map(v => v.name),
+      100,
+      (n) => {
+        console.log(n);
+        setMappingProgress(n);
+      }
+    );
+    mappedGraph = computeUnmatchedChildren(mappedGraph);
+    setGraph(mappedGraph.copy());
+    // @ts-ignore
+    window.graph = graph
+  }
 
   return (
     <>
       <div className="bg-gray-300">
-        <h1 className="text-3xl font-bold underline flex justify-center">
-          LGD Mapper
-        </h1>
-        <main className="grid grid-cols-3 gap-3 mt-2 mx-2">
+        <header className="flex justify-between p-2">
+          <h1 className="text-3xl font-bold flex justify-center">
+            LGD Mapper
+          </h1>
+          <div className="grid grid-cols-2 gap-2 divide-x divide-stone-400">
+            <div>
+              <div className="text-xs">Import app state</div>
+              <FileUpload handleChange={importAppState} accept=".json" />
+            </div>
+            {graph !== null && (
+              <div className="pl-2">
+                <div className="text-xs mb-1">Export</div>
+                <div className="flex flex-row gap-2">
+                  <button
+                    className="text-gray-50 px-2 text-sm bg-cyan-900 border-2 border-cyan-800"
+                    onClick={() => exportAppState(appState, graphState)}>
+                    App State
+                  </button>
+                  <button
+                    className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
+                    onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
+                  >
+                    Mapped DataFrame
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </header>
+        <main className="grid grid-cols-3 gap-1 mx-1">
           <div className=" bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
-            <FileUpload onFileLoad={setDF} /* setUIState={setState} */ />
-            {df !== null && (
+            <DatasetUpload setFile={(f) => { resetState(); setFile(f); }} setColumnNames={setColumns} /* setUIState={setState} */ />
+            {columns !== null && (
               <SelectLGDCols
-                columns={df.columns}
+                columns={columns}
                 selectedCols={lgdCols}
-                onSelectionChange={setLGDCols}
+                onSelectionChange={setLgdCols}
               />
             )}
             {lgdCols.length > 0 && (
@@ -69,16 +128,28 @@ function App() {
           </div>
           <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
             {/* @ts-ignore */}
-            {isHierarchySet() && graph !== null && (
-              <Explorer graph={graph} setActiveNode={setNode} />
+            {graph !== null && (
+              <>
+                <div className="flex justify-between mb-1">
+                  {mappingProgress !== null && (<span className="algin-middle px-2">{(100 * mappingProgress).toFixed(2)} %</span>)}
+                  <button
+                    className="py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
+                    onClick={startMapping}
+                  >
+                    Fetch Matches
+                  </button>
+                </div>
+                <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
+              </>
             )}
           </div>
           <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
-            {node !== null && graph !== null && (
-              <EntityView node={node} graph={graph} setGraph={setGraph}/>
+            {activeNode !== null && graph !== null && (
+              <EntityView node={activeNode} graph={graph} setGraph={setGraph} />
             )}
           </div>
         </main>
+        <Notes />
       </div>
     </>
   );

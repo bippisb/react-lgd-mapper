@@ -43,7 +43,7 @@ export const LazyExplorerItem: FC<LazyExplorerItemProps> = ({
     }
 
     return (
-        <div className="px-2 border-b-2 border-l-2 border-r-2 border-gray-500 border-dotted">
+        <div className="px-2 border-b-2 border-l-2 border-r-2 border-gray-500 border-dotted border-opacity-50">
             <div className="flex justify-between">
                 <span onClick={handleClick} className={attrs?.match ? "" : "text-rose-500"}>
                     {Boolean(attrs.title) ? attrs.title : "<NA>"}
