@@ -7,28 +7,42 @@ interface AddVariationProps {
     node: string;
 }
 
-export const AddVariation: FC = ({ entity_id, variation, node }) => {
-    const [state, setState] = useState<AddVariationProps>({
-        entity_id,
-        variation,
-        node
-    });
 
+export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation, node }) => {
+    const [state, setState] = useState<{ variation: string; email: string; }>({
+        variation,
+        email: ""
+    });
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-        const key = e.currentTarget.name;
         const value = e.currentTarget.value;
-        setState(state => ({
-            ...state,
-            [key]: value,
-        }))
+        const key = e.currentTarget.name;
+        setState(state => ({ ...state, [key]: value }))
     };
 
-
     return (
-        <div>
-            <label htmlFor={node + "add_var"} className="text-xl">Add Variation</label>
-            <input name={node + "add_var"} value={state.variation} onChange={handleChange} type="text" />
-            <button onClick={() => addVariation(state.variation, entity_id)}>Submit</button>
+        <div className="p-2 ">
+            <input
+                className="w-full block mb-2 pl-2 px-[4px]"
+                placeholder="Name variation"
+                name={"variation"}
+                value={state.variation}
+                onChange={handleChange}
+                type="text"
+            />
+            <input
+                className="w-full block pl-2 px-[4px]"
+                placeholder="Your email address"
+                name={"email"}
+                value={state.email}
+                onChange={handleChange}
+                type="email"
+            />
+            <button
+                className="m-1 py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
+                onClick={() => addVariation(variation, entity_id)}
+            >
+                Suggest Variation
+            </button>
         </div>
     )
 }
