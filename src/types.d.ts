@@ -18,6 +18,7 @@ export interface ILGDMatch {
     name: string; // entity name
     level_id: number; // level id
     level: string; // level name
+    parents?: ILGDMatch[];
 }
 
 export interface ILGDLevel {
@@ -26,3 +27,9 @@ export interface ILGDLevel {
 }
 
 export type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";
+
+export interface MatchItem {
+    name: string;
+    level?: LevelName;
+    parent_id?: number;
+}

@@ -1,9 +1,9 @@
 import { DirectedGraph } from "graphology";
-import { FC, ReactNode } from "react";
+import { FC, ReactNode, useEffect } from "react";
 import { getRootNodes } from "../services/graph";
 import { LGDNodeAttributes } from "../types";
 
-interface ExplorerProps {
+export interface ExplorerProps {
   graph: DirectedGraph;
   setActiveNode: (node: string) => void;
 }
@@ -25,6 +25,10 @@ export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
   };
 
   const rootNodes = getRootNodes(graph);
+
+  useEffect(() => {
+    console.log("rendering graph")
+  }, [graph])
   return (
     <div>
       <div>{"(matches) [number of unmatched children]"}</div>
