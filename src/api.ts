@@ -29,9 +29,9 @@ export const getBatchedMatches = async (payload: MatchItem[], with_parents = fal
 }
 
 
-export const addVariation = async (variation: string, entity_id: number) => {
+export const addVariation = async (variation: string, entity_id: string, email: string) => {
   const res = await axiosInstance.post("/add/variation", {
-    variation, entity_id
+    variation, entity_id, email
   })
   return res.data
 }

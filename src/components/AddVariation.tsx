@@ -18,7 +18,11 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation, node
         const key = e.currentTarget.name;
         setState(state => ({ ...state, [key]: value }))
     };
-
+    const handleSubmit = async () => {
+        const res = await addVariation(state.variation, String(entity_id), state.email)
+        alert("Added Variation")
+        console.log(res.data)
+    }
     return (
         <div className="p-2 ">
             <input
@@ -39,7 +43,7 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation, node
             />
             <button
                 className="m-1 py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
-                onClick={() => addVariation(variation, entity_id)}
+                onClick={handleSubmit}
             >
                 Suggest Variation
             </button>
