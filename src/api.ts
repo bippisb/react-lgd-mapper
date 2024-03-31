@@ -13,18 +13,25 @@ export const getLevels = async () => {
   return res.data.filter((l: any) => l.name !== "india")
 }
 
-export const getMatches = async (name: string, level_name: LevelName, parent_id: number | null = null, with_parents = false) => {
+export const getMatches = async (name: string, level_name: LevelName, parent_id: number | null = null, with_parents = false, with_community_variations = true) => {
   const res = await axiosInstance.post("/match/entity", {
-    name,
-    level: level_name,
-    parent_id,
+    items: [{
+      name,
+      level: level_name,
+      parent_id,
+    }],
     with_parents,
+    with_community_variations
   });
-  return res.data;
+  return res.data[0];
 }
 
-export const getBatchedMatches = async (payload: MatchItem[], with_parents = false) => {
-  const res = await axiosInstance.post("/match/entity", payload.map(p => ({ ...p, with_parents })));
+export const getBatchedMatches = async (payload: MatchItem[], with_parents = false, with_community_variations = true) => {
+  const res = await axiosInstance.post("/match/entity", {
+    with_parents,
+    with_community_variations,
+    items: payload
+  });
   return res.data;
 }
 
