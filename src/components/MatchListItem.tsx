@@ -28,9 +28,7 @@ const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
     {match?.parents?.length && (
       <div>
         <div className="text-xs text-left uppercase">Parents</div>
-        <div className="flex m-2">
-          <MatchesTableView matches={match.parents} />
-        </div>
+        <MatchesTableView matches={match.parents} className="flex flex-row p-2 bg-slate-100 divide-x-2 gap-1" />
       </div>
     )}
   </div>

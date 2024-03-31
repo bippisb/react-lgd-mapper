@@ -6,15 +6,17 @@ export interface MatchesTableViewProps {
   matches: ILGDMatch[];
   node?: string;
   onSelect?: (m: ILGDMatch) => void;
-  match?: ILGDMatch
+  match?: ILGDMatch;
+  className?: string;
 }
 
 export const MatchesTableView: FC<MatchesTableViewProps> = ({
   match,
   matches,
-  onSelect = () => {},
+  onSelect = () => { },
+  className = "flex flex-col gap-2"
 }) => (
-  <div className="flex flex-col gap-2">
+  <div className={className}>
     {matches.map((m) => (
       <div
         key={m.id}

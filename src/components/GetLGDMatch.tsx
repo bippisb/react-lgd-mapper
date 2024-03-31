@@ -111,14 +111,17 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
           </button>
         </div>
       </div>
-      {results !== null && results.length > 0 && (
-        <MatchesTableView
-          matches={results}
-          match={match}
-          node="get_matches"
-          onSelect={onSelect}
-        />
-      )}
+      {results === null ? "" :
+        results.length === 0 ?
+          (<p className="text-sm text-gray-600 font-medium">No matches found for '{state.title}'.</p>)
+          : (
+            <MatchesTableView
+              matches={results}
+              match={match}
+              node="get_matches"
+              onSelect={onSelect}
+            />
+          )}
     </div>
   );
 };
