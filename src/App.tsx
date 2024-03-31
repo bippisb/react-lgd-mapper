@@ -8,7 +8,7 @@ import { EntityView } from "./components/Entity";
 import { LazyExplorer } from "./components/LazyExplorer";
 import { Notes } from "./components/Notes";
 import { getUniqueRecords } from "./services/pyodide-worker";
-import { exportAppState, exportMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
+import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
 import { FileUpload } from "./components/FileUpload";
 
 
@@ -91,19 +91,29 @@ function App() {
             </div>
             {graph !== null && (
               <div className="pl-2">
-                <div className="text-xs mb-1">Export</div>
                 <div className="flex flex-row gap-2">
                   <button
                     className="text-gray-50 px-2 text-sm bg-cyan-900 border-2 border-cyan-800"
                     onClick={() => exportAppState(appState, graphState)}>
                     App State
                   </button>
-                  <button
-                    className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
-                    onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
-                  >
-                    Mapped DataFrame
-                  </button>
+                  <div>
+                    <div className="text-sm bg-gray-600 text-gray-50 text-center">DataFrame</div>
+                    <div>
+                      <button
+                        className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
+                        onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
+                      >
+                        Mapped
+                      </button>
+                      <button
+                        className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
+                        onClick={() => exportUnMappedDataFrame(graph, appState.hierarchy!)}
+                      >
+                        Unmapped
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}

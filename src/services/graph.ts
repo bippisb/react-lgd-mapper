@@ -60,58 +60,83 @@ export const getRootNodes = (graph: DirectedGraph) => {
     return graph.filterNodes(node => graph.inDegree(node) === 0);
 }
 
-const prepareHeader = (hierarchy: Hierarchy) => {
+const prepareHeader = (hierarchy: Hierarchy, prepColumnNames: (lvl: any) => string[]) => {
     const copy = { ...hierarchy }
     for (const key in hierarchy) {
         copy[key]["column"] = key;
     }
     const levels = Object.values(copy);
     levels.sort((a, b) => a.code - b.code);
-    console.log(levels)
+
     const head = [];
     for (const lvl of levels) {
         head.push(
-            lvl["column"],
-            "lgd_mapped_" + lvl["name"] + "_name",
-            lvl["name"] + "_lgd_code",
-
-        )
+            ...prepColumnNames(lvl)
+        );
     }
-    return head.join(",")
+    return head.join(",");
 }
 
-export const prepareMappedDataFrameCSV = (graph: DirectedGraph, hierarchy: Hierarchy) => {
+export const prepareMappedDataFrameCSV = (
+    graph: DirectedGraph,
+    hierarchy: Hierarchy,
+) => {
     const prepRow = (node: string, row: string[] = []): string => {
         const attrs = graph.getNodeAttributes(node);
         if (!attrs?.match) {
-            return ""
+            return "";
         }
-        row.unshift(
-            attrs.title,
-            attrs.match.name,
-            attrs.match.code,
-        )
-
+        row.unshift(attrs.title, attrs.match.name, attrs.match.code);
         const parents = graph.inNeighbors(node);
         if (parents.length > 0) {
             const parent = parents[0];
-            return prepRow(parent, row)
+            return prepRow(parent, row);
         }
+        return row.join(",");
+    };
 
-        return row.join(",")
-    }
+    const prepColumnNames = (lvl: any) => [
+        lvl["column"],
+        "lgd_mapped_" + lvl["name"] + "_name",
+        lvl["name"] + "_lgd_code",
+    ]
 
-    let csv = prepareHeader(hierarchy) + "\n";
+    let csv = prepareHeader(hierarchy, prepColumnNames) + "\n";
     const terminalNodes = getTerminalNodes(graph);
     for (const node of terminalNodes) {
         const row = prepRow(node);
-        if (row === "") {
-            continue
+        if (row !== '') {
+            csv = csv + row + "\n";
         }
-        csv = csv + row + "\n";
     }
-    return csv
-}
+    return csv;
+};
+
+
+export const prepareUnmappedDataFrameCSV = (graph: DirectedGraph, hierarchy: Hierarchy) => {
+    const prepRow = (node: string): string => {
+        const attrs = graph.getNodeAttributes(node);
+        if (!!attrs?.match) {
+            return "";
+        }
+        let row = node.split(",").filter(a => isNaN(a));
+        return row.join(",")
+    };
+
+    const prepColumnNames = (lvl: any) => [
+        lvl["name"]
+    ]
+
+    let csv = prepareHeader(hierarchy, prepColumnNames) + "\n";
+    const terminalNodes = getTerminalNodes(graph);
+    for (const node of terminalNodes) {
+        const row = prepRow(node);
+        if (row !== '') {
+            csv = csv + row + "\n";
+        }
+    }
+    return csv;
+};
 
 const isTerminalNode = (graph: DirectedGraph) => (node: string) => {
     return graph.outNeighbors(node).length === 0;

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Hierarchy } from "../components/SelectColumnHierarchy";
 import { DirectedGraph } from "graphology";
-import { getRootNodes, prepareMappedDataFrameCSV } from "./graph";
+import { getRootNodes, prepareMappedDataFrameCSV, prepareUnmappedDataFrameCSV } from "./graph";
 
 interface IAppState {
     columns: string[] | null;
@@ -82,6 +82,11 @@ export const exportAppState = (appState: IAppState, graphState: IGraph) => {
 export const exportMappedDataFrame = (graph: DirectedGraph, hierarchy: Hierarchy) => {
     const csv = prepareMappedDataFrameCSV(graph, hierarchy);
     downloadText(csv, "mapped_dataframe.csv", "text/csv")
+}
+
+export const exportUnMappedDataFrame = (graph: DirectedGraph, hierarchy: Hierarchy) => {
+    const csv = prepareUnmappedDataFrameCSV(graph, hierarchy);
+    downloadText(csv, "unmapped_dataframe.csv", "text/csv")
 }
 
 export const loadAppState = async (file: File, appState: IAppState, graphState: IGraphState) => {
