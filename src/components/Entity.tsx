@@ -15,11 +15,27 @@ interface EntityViewProps {
 export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
   const attrs = graph.getNodeAttributes(node);
   const parent_id = getParentNodeId(node, graph);
+  
+  const isMatched = !!attrs?.match;
 
   const setMatch = (match: ILGDMatch | undefined) => {
     graph.mergeNodeAttributes(node, {
       match,
     });
+
+    if (!isMatched) {
+      // update unmatched entities count
+      let parent = graph.inNeighbors(node)[0]
+      do {
+        let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
+        graph.mergeNodeAttributes(parent, {
+          unmatchedChildren: unmatchedChildren - 1,
+        });
+
+        parent = graph.inNeighbors(parent)[0];
+      } while (parent);
+    }
+
     setGraph(graph.copy());
   };
 
