@@ -7,7 +7,7 @@ import { computeUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
 import { EntityView } from "./components/Entity";
 import { LazyExplorer } from "./components/LazyExplorer";
 import { Notes } from "./components/Notes";
-import { getUniqueRecords } from "./services/pyodide-worker";
+import { getUniqueRecords } from "./services/duckdb";
 import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
 import { FileUpload } from "./components/FileUpload";
 
@@ -50,7 +50,7 @@ function App() {
     }
 
     (async () => {
-      const records = await getUniqueRecords(file, lgdCols);
+      const records = await getUniqueRecords(lgdCols);
       console.log("loaded records", records.length)
       const lgdGraph = buildLGDGraph(records, hierarchy);
       console.log("built graph")

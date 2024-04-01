@@ -12,7 +12,7 @@ export const compareNodesByLevel = (a: any, b: any) => {
     return 0
 }
 
-export const buildLGDGraph = (records: Map<string, string>[], hierarchy: Hierarchy) => {
+export const buildLGDGraph = (records: object, hierarchy: Hierarchy) => {
     const lgdColumns = Object.entries(hierarchy)
         .map(([col, lvl]) => ([col, lvl.id]))
         .sort(compareNodesByLevel)
@@ -25,12 +25,12 @@ export const buildLGDGraph = (records: Map<string, string>[], hierarchy: Hierarc
         for (let i = 0; i < lgdColumns.length; i++) {
             const col = lgdColumns[i];
             const lvl = hierarchy[col];
-            const title = record.get(col) as string;
+            const title = record[col] as string;
             const node = Array.from({ length: i + 1 }, (_, i) => i)
                 .reduce((level, i) => {
                     const col: string = lgdColumns[i];
                     const lvl: { id: string } = hierarchy[col];
-                    const name: string[] = [record.get(col) as string, lvl.id];
+                    const name: string[] = [record[col] as string, lvl.id];
                     // @ts-ignore
                     level.push(...name)
                     return level

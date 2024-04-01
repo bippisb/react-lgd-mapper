@@ -1,5 +1,5 @@
 import { ChangeEvent, FC } from "react";
-import { getColumnNames } from "../services/utils";
+import { getColumnNames } from "../services/duckdb";
 import { getPyodide } from "../services/pyodide";
 import { Tooltip } from "./Tooltip";
 import { FileUpload } from "./FileUpload";
@@ -33,7 +33,7 @@ export const DatasetUpload: FC<DatasetUploaderProps> = ({ setFile, setColumnName
         <Tooltip text="The file should contain only unique records of LGD entities." />
       </div>
       <div className="p-2">
-      <FileUpload handleChange={handleChange} subtext="Only CSV is allowed" />
+      <FileUpload handleChange={handleChange} subtext="Only CSV and Parquet files are allowed" accept=".csv,.parquet" />
       </div>
     </div>
   );
