@@ -1,5 +1,5 @@
 import { DirectedGraph } from "graphology";
-import { getBatchedMatches, getMatches } from "../api";
+import { getMatches, getBatchedMatches } from "../services/query";
 import { LevelName } from "../types";
 
 
@@ -53,7 +53,7 @@ export const lgdMapGraph = async (graph: DirectedGraph) => {
         if (!!attrs.title) {
             const parent_id = getParentNodeId(node, graph);
             console.log(node, parent_id)
-            const matches = await getMatches(attrs.title, attrs.level_name, parent_id);
+            const matches = await getMatches(attrs.title, attrs.level_id, parent_id);
             graph.mergeNodeAttributes(node, {
                 matches,
                 // Matched if only a single match is found,
@@ -82,12 +82,12 @@ export const lgdMapInBatches = async (
         for (let i = 0; i < nodes.length; i += batchSize) {
             const batch = nodes.slice(i, i + batchSize);
             const payload = batch.map(node => {
-                const { title, level_name } = graph.getNodeAttributes(node);
+                const { title, level_id } = graph.getNodeAttributes(node);
                 const parent_id = getParentNodeId(node, graph);
 
                 return {
                     name: Boolean(title) ? title : "",
-                    level: level_name,
+                    level_id: level_id,
                     parent_id,
                 }
             })

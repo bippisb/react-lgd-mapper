@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { getLevels } from "../api";
+import { getLevels } from "../services/query";
 import { ILGDLevel } from "../types";
 
 export type Hierarchy = { [lgdCol: string]: any };

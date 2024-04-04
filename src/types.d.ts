@@ -13,17 +13,17 @@ export interface LGDNodeAttributes {
 }
 
 export interface ILGDMatch {
-    code: number; // entity's LGD code
-    id: number; // entity id
+    code: BigInt; // entity's LGD code
+    id: BigInt; // entity id
     name: string; // entity name
-    level_id: number; // level id
+    level_id: BigInt; // level id
     level: string; // level name
     parents?: ILGDMatch[];
 }
 
 export interface ILGDLevel {
     name: string;
-    id: number;
+    id: BigInt;
 }
 
 export type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";

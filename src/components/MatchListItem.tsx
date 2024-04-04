@@ -13,15 +13,15 @@ const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
       <div className="grid grid-cols-3 divide-x divide-stone-600 divide-opacity-50 border-t-[1px] border-stone-600">
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">Id</span>
-          <span>{match.id}</span>
+          <span>{match.id.toString()}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">Level</span>
-          <span>{match.level || match.level_id}</span>
+          <span>{match.level || match.level_id.toString()}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">LGD</span>
-          <span>{match.code}</span>
+          <span>{match.code.toString()}</span>
         </div>
       </div>
     </div>

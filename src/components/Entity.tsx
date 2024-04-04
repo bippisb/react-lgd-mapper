@@ -70,7 +70,7 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
             <div className="border-2 border-stone-400 border-opacity-40">
 
               <MatchListItem match={attrs.match} />
-              <AddVariation node={node} entity_id={attrs.match.id} variation={""} />
+              <AddVariation node={node} entity_id={attrs.match.id} variation={attrs.title} />
             </div>
           </>
         )

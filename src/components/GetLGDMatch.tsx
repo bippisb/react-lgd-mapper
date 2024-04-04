@@ -1,5 +1,5 @@
 import { ChangeEvent, FC, useEffect, useState } from "react";
-import { getMatches, getLevels } from "../api";
+import { getMatches, getLevels } from "../services/query";
 import { ILGDLevel, ILGDMatch, LevelName } from "../types";
 import { MatchesTableView } from "./MatchesTableView";
 
@@ -35,6 +35,18 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     useParent: !!parent_id,
   });
 
+  useEffect(() => {
+    setState(({
+      title,
+      level_id: level,
+      useParent: !!parent_id,
+    }));
+  }, [title, level, parent_id])
+
+  useEffect(() => {
+    setResults(matches);
+  }, [matches])
+  
   const fetchMatches = async () => {
     const {
       title,
@@ -42,9 +54,8 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
       useParent
     } = state;
     const lvl = levels.find(v => v.name === level_id);
-    const level_name = lvl?.name as LevelName;
     const parentArg = useParent ? parent_id : null;
-    const results = await getMatches(title, level_name, parentArg, true);
+    const results = await getMatches(title, lvl?.id, parentArg, true);
     setResults(results);
   };
   const handleChange = (
