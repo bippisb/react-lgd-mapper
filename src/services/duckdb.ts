@@ -3,6 +3,11 @@ import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
 import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
 import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
+import adminHierarchyParquet from "../assets/adminhierarchy.parquet?url";
+import discoveredVariationParquet from "../assets/discoveredvariation.parquet?url";
+import entityParquet from "../assets/entity.parquet?url";
+import levelParquet from "../assets/level.parquet?url";
+import variationParquet from "../assets/variation.parquet?url";
 
 const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
     mvp: {
@@ -32,6 +37,7 @@ const instantiateDuckDB = async () => {
     const logger = new duckdb.ConsoleLogger();
     const db = new duckdb.AsyncDuckDB(logger, worker);
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+    await loadLocalGovernmentDirectory(db);
     return db
 }
 
@@ -52,10 +58,34 @@ export const getUniqueRecords = async (lgdColumns: string[]) => {
     const db = await getDuckDB();
     const c = await db.connect();
     const unique_rows = await c.query(`
-    SELECT DISTINCT ${lgdColumns.join(", ")} FROM dataset;
+    SELECT DISTINCT ${lgdColumns.join(", ")}
+    FROM dataset
+    ORDER BY ${lgdColumns.join(", ")};
     `)
     c.close();
     const unique_records = unique_rows.toArray().map(a => a.toJSON());
     console.log(unique_records);
     return unique_records;
+}
+
+export const loadLocalGovernmentDirectory = async (db: duckdb.AsyncDuckDB) => {
+    const c = await db.connect();
+    const loadAsTable = async (tableName: string, url: string) => {
+        return await c.query(`
+        CREATE TABLE ${tableName} AS
+            SELECT * FROM 'http://localhost:5173${url}'
+        `);
+    }
+    const tables = {
+        "entity": entityParquet,
+        "adminhierarchy": adminHierarchyParquet,
+        "variation": variationParquet,
+        "discoveredVariation": discoveredVariationParquet,
+        "level": levelParquet,
+    };
+    for (let [key, value] of Object.entries(tables)) {
+        const t = await loadAsTable(key, value);
+        console.log(t);
+    }
+    c.close();
 }
