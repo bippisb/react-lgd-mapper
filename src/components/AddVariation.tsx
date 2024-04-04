@@ -1,4 +1,4 @@
-import { ChangeEvent, FC, useState } from "react";
+import { ChangeEvent, FC, useEffect, useState } from "react";
 import { addVariation } from "../api";
 
 interface AddVariationProps {
@@ -13,6 +13,14 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation, node
         variation,
         email: ""
     });
+
+    useEffect(() => {
+        setState(v => ({
+            ...v,
+            variation,
+        }))
+    }, [entity_id])
+
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const value = e.currentTarget.value;
         const key = e.currentTarget.name;

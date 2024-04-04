@@ -12,12 +12,15 @@ export const compareNodesByLevel = (a: any, b: any) => {
     return 0
 }
 
-export const buildLGDGraph = (records: object, hierarchy: Hierarchy) => {
-    const lgdColumns = Object.entries(hierarchy)
+export const getLGDColsInHierarchicalOrder = (hierarchy: Hierarchy) => {
+    return Object.entries(hierarchy)
         .map(([col, lvl]) => ([col, lvl.id]))
         .sort(compareNodesByLevel)
         .map(([c]) => c);
+}
 
+export const buildLGDGraph = (records: object, hierarchy: Hierarchy) => {
+    const lgdColumns = getLGDColsInHierarchicalOrder(hierarchy);
     const graph = new DirectedGraph();
 
     for (const record of records) {

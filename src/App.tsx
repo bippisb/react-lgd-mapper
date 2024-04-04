@@ -2,7 +2,7 @@ import { ChangeEvent, useEffect, useState } from "react";
 import { DatasetUpload } from "./components/DatasetUpload";
 import SelectLGDCols from "./components/SelectLGDCols";
 import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy";
-import { buildLGDGraph } from "./services/graph";
+import { buildLGDGraph, getLGDColsInHierarchicalOrder } from "./services/graph";
 import { computeUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
 import { EntityView } from "./components/Entity";
 import { LazyExplorer } from "./components/LazyExplorer";
@@ -50,7 +50,8 @@ function App() {
     }
 
     (async () => {
-      const records = await getUniqueRecords(lgdCols);
+      const orderedLGDCols = getLGDColsInHierarchicalOrder(hierarchy);
+      const records = await getUniqueRecords(orderedLGDCols);
       console.log("loaded records", records.length)
       const lgdGraph = buildLGDGraph(records, hierarchy);
       console.log("built graph")
@@ -74,7 +75,7 @@ function App() {
     mappedGraph = computeUnmatchedChildren(mappedGraph);
     setGraph(mappedGraph.copy());
     // @ts-ignore
-    window.graph = graph
+    window.graph = graph;
   }
 
   return (

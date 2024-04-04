@@ -1,6 +1,5 @@
 import { ChangeEvent, FC } from "react";
 import { getColumnNames } from "../services/duckdb";
-import { getPyodide } from "../services/pyodide";
 import { Tooltip } from "./Tooltip";
 import { FileUpload } from "./FileUpload";
 
@@ -17,9 +16,6 @@ export const DatasetUpload: FC<DatasetUploaderProps> = ({ setFile, setColumnName
     if (fileList && fileList.length > 0) {
       const file = fileList[0];
       const columnNames = await getColumnNames(file);
-      // TODO: support parquet(fastparquet) and excel files
-      const pyodide = await getPyodide();
-      pyodide.globals.clear()
       setFile(file);
       setColumnNames(columnNames);
     }
