@@ -19,6 +19,7 @@ export interface ILGDMatch {
     level_id: BigInt; // level id
     level: string; // level name
     parents?: ILGDMatch[];
+    match_type?: string;
 }
 
 export interface ILGDLevel {

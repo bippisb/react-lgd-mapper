@@ -1,5 +1,5 @@
 import { ChangeEvent, FC } from "react";
-import { getColumnNames } from "../services/duckdb";
+import { loadDatasetAsTable } from "../services/duckdb";
 import { Tooltip } from "./Tooltip";
 import { FileUpload } from "./FileUpload";
 
@@ -15,7 +15,7 @@ export const DatasetUpload: FC<DatasetUploaderProps> = ({ setFile, setColumnName
 
     if (fileList && fileList.length > 0) {
       const file = fileList[0];
-      const columnNames = await getColumnNames(file);
+      const columnNames = await loadDatasetAsTable(file);
       setFile(file);
       setColumnNames(columnNames);
     }

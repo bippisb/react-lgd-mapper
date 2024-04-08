@@ -75,7 +75,7 @@ export const downloadText = (text: string, fileName: string, type: string) => {
 
 export const exportAppState = (appState: IAppState, graphState: IGraph) => {
     const state = serializeState(appState, graphState);
-    const json = JSON.stringify(state);
+    const json = JSON.stringify(state, replacer);
     downloadText(json, "lgd_mapper_app_state.json", "application/json")
 }
 

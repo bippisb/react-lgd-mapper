@@ -41,17 +41,33 @@ const instantiateDuckDB = async () => {
     return db
 }
 
-export const getColumnNames = async (file: File): Promise<string[]> => {
+export const loadDatasetAsTable = async (file: File): Promise<string[]> => {
     const db = await getDuckDB();
     await db.registerFileHandle(file.name, file, duckdb.DuckDBDataProtocol.BROWSER_FILEREADER, true);
     const c = await db.connect();
     await c.query(`
     CREATE TABLE dataset AS
-        SELECT * FROM '${file.name}'
+        SELECT * FROM '${file.name}';
     `);
-    const first_row = await c.query("SELECT * FROM dataset LIMIT 1;");
+    const columnNames: string[] = await getColumnNames("dataset");
+
+    console.log("loaded dataset")
+    return columnNames;
+}
+
+export const getDBConnection = async () => {
+    const db = await getDuckDB();
+    const c = await db.connect();
+    return c;
+}
+
+export const getColumnNames = async (tableName: string, c?: duckdb.AsyncDuckDBConnection): Promise<string[]> => {
+    c = !c? await getDBConnection() : c;
+    const first_row = await c.query(`SELECT * FROM ${tableName};`);
     c.close();
-    return first_row.schema.fields.map(a => a.name);
+    const columnNames = first_row.schema.fields.map(a => a.name);
+    console.log(tableName, "columns", columnNames)
+    return columnNames;
 }
 
 export const getUniqueRecords = async (lgdColumns: string[]) => {

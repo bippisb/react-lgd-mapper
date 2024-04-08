@@ -97,7 +97,7 @@ export const lgdMapInBatches = async (
                 const m = matches[j];
                 graph.mergeNodeAttributes(n, {
                     matches: m,
-                    match: m?.length === 1 ? m[0] : undefined,
+                    match: m?.filter(i => i?.match_type !== "fuzzy")?.length === 1 ? m[0] : undefined,
                 });
             }
             nFetched = i + batch.length;

@@ -1,3 +1,4 @@
+import Fuse, { IFuseOptions } from "fuse.js";
 import { getDuckDB } from "./duckdb"
 
 const runQuery = async (q: string) => {
@@ -11,14 +12,14 @@ const runQuery = async (q: string) => {
 export const getExactMatch = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null) => {
     name = name.trim().toLowerCase();
     const q = `
-    SELECT entity.id, entity.name, entity.code, entity.level_id 
+    SELECT entity.id, entity.name, entity.code, entity.level_id, 'exact' AS match_type
     FROM entity 
     ${parentId !== null ? "JOIN adminhierarchy ON adminhierarchy.child_id = entity.id" : ""}
     WHERE entity.name = '${name}'
     ${levelId !== null ? `AND entity.level_id = ${levelId.toString()}` : ""}
     ${parentId !== null ? `AND adminhierarchy.entity_id = ${parentId.toString()}` : ""}
     `
-    
+
     const results = await runQuery(q);
     return results;
 }
@@ -32,7 +33,7 @@ export const getLevels = async () => {
 export const getMatchesUsingVariations = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null, useCommunityVariations = false) => {
     name = name.trim().toLowerCase();
     const buildQuery = (table: "variation" | "discoveredvariation") => `
-    SELECT DISTINCT entity.id, entity.name, entity.code, entity.level_id
+    SELECT DISTINCT entity.id, entity.name, entity.code, entity.level_id, '${table}' as match_type
     FROM ${table}
     JOIN entity ON entity.id = ${table}.entity_id
     ${parentId !== null ? "JOIN adminhierarchy ON adminhierarchy.child_id = entity.id" : ""}
@@ -43,7 +44,7 @@ export const getMatchesUsingVariations = async (name: string, levelId: BigInt | 
 
     let results = await runQuery(buildQuery("variation"));
     if (!useCommunityVariations) {
-        return results
+        return results;
     }
 
     if (results.length > 0) {
@@ -54,7 +55,7 @@ export const getMatchesUsingVariations = async (name: string, levelId: BigInt | 
     return results;
 }
 
-export const getParents = async (entityId: number) => {
+export const getParents = async (entityId: BigInt) => {
     const q = `
     WITH RECURSIVE cte AS (
         SELECT ah.*
@@ -69,14 +70,44 @@ export const getParents = async (entityId: number) => {
     FROM entity e
     WHERE e.id IN (SELECT entity_id FROM cte);
     `
-    return await runQuery(q)
+    const results = await runQuery(q);
+    return results;
 }
 
+export const getImmediateChildren = async (entityId: BigInt) => {
+    const q = `
+    SELECT DISTINCT e.*
+    FROM entity e
+    INNER JOIN adminhierarchy ah ON e.id = ah.child_id
+    WHERE ah.entity_id = ${entityId.toString()};
+    `
+    const results = await runQuery(q);
+    return results;
+}
 
+export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
+    name = name.trim().toLowerCase();
+    const children = await getImmediateChildren(parentId);
+    
+    const fuse_options: IFuseOptions<any> = {
+        includeScore: true,
+        keys: ["name"],
+    }
+    const fuse = new Fuse(children, fuse_options);
+    let results = fuse.search(name);
+    results = results.map(v => ({
+        ...v["item"],
+        score: v.score,
+        refIndex: v.refIndex,
+        match_type: "fuzzy",
+    })).filter(m => m.score <= 0.3)
+    console.log("fuzzy", name, results, children);
+    return results;
+}
 
-export const getMatches = async (name: string, levelId: number | null = null, parentId: number | null = null, withParents = false, useCommunityVariations = false) => {
+export const getMatches = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null, withParents = false, useCommunityVariations = false) => {
     const prepResponse = (matches: any[]) => {
-        return matches.map(r => {
+        return matches.map((r) => {
             if (withParents) {
                 r["parents"] = getParents(r.id);
             }
@@ -89,9 +120,14 @@ export const getMatches = async (name: string, levelId: number | null = null, pa
     if (matches.length > 0) {
         return prepResponse(matches);
     }
-
+    
     matches = await getMatchesUsingVariations(name, levelId, parentId, useCommunityVariations)
-    return prepResponse(matches);
+    if (matches.length > 0 || parentId === null) {
+        return prepResponse(matches);
+    }
+
+    matches = await getFuzzyMatches(name, parentId);
+    return matches;
 }
 
 export const getBatchedMatches = async (payload: any[]) => {
@@ -99,3 +135,4 @@ export const getBatchedMatches = async (payload: any[]) => {
         return getMatches(v.name, v.level_id, v.parent_id)
     }))
 }
+

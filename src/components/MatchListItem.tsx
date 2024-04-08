@@ -7,7 +7,7 @@ export interface MatchListItemProps {
 }
 
 const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
-  <div className="text-center bg-neutral-50 p-1 rounded-sm shadow-md">
+  <div className="text-center bg-neutral-50 p-1 rounded-sm shadow-md relative">
     <div>
       <span>{match.name.toUpperCase()}</span>
       <div className="grid grid-cols-3 divide-x divide-stone-600 divide-opacity-50 border-t-[1px] border-stone-600">
@@ -25,6 +25,11 @@ const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
         </div>
       </div>
     </div>
+    {match?.match_type && (
+      <div className="absolute top-0 right-0 bg-cyan-900 text-white text-sm px-2">
+        <span className="capitalize">{match.match_type}</span>
+      </div>
+    )}
     {match?.parents?.length && (
       <div>
         <div className="text-xs text-left uppercase">Parents</div>
