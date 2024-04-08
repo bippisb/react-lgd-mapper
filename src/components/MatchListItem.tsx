@@ -6,6 +6,16 @@ export interface MatchListItemProps {
   match: ILGDMatch;
 }
 
+const LEVELS = {
+  "1": "india",
+  "2": "state",
+  "3": "district",
+  "4": "sub district",
+  "5": "block",
+  "6": "panchayat",
+  "7": "village"
+}
+
 const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
   <div className="text-center bg-neutral-50 p-1 rounded-sm shadow-md relative">
     <div>
@@ -17,7 +27,7 @@ const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">Level</span>
-          <span>{match.level || match.level_id.toString()}</span>
+          <span>{match.level || LEVELS[match.level_id.toString()]}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">LGD</span>
