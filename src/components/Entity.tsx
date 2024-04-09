@@ -1,5 +1,5 @@
 import { DirectedGraph } from "graphology";
-import { FC } from "react";
+import { FC, useMemo } from "react";
 import { ILGDMatch } from "../types";
 import { GetLGDMatchComponent } from "./GetLGDMatch";
 import { getParentNodeId } from "../services/lgd";
@@ -13,12 +13,12 @@ interface EntityViewProps {
 }
 
 export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
-  const attrs = graph.getNodeAttributes(node);
-  const parent_id = getParentNodeId(node, graph);
-  
+  const attrs = useMemo(() => graph.getNodeAttributes(node), [graph, node]);
+  const parent_id = useMemo(() => getParentNodeId(node, graph), [graph, node]);
+
   const isMatched = !!attrs?.match;
 
-  const setMatch = (match: ILGDMatch | undefined) => {
+  const setMatch = useMemo(() => (match: ILGDMatch | undefined) => {
     graph.mergeNodeAttributes(node, {
       match,
     });
@@ -27,23 +27,25 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
       // update unmatched entities count
       let parent = graph.inNeighbors(node)[0]
       do {
-        let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
-        graph.mergeNodeAttributes(parent, {
-          unmatchedChildren: unmatchedChildren - 1,
-        });
-
-        parent = graph.inNeighbors(parent)[0];
+        if (parent) {
+          let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
+          graph.mergeNodeAttributes(parent, {
+            unmatchedChildren: unmatchedChildren - 1,
+          });
+  
+          parent = graph.inNeighbors(parent)[0];
+        }
       } while (parent);
     }
 
     setGraph(graph.copy());
-  };
+  }, [graph, node]);
 
 
   return (
     <div>
       <h4 className="px-2 flex gap-2">
-         <span className="italic">{attrs.level_name}</span>
+        <span className="italic">{attrs.level_name}</span>
         <span className="font-bold">{attrs.title}</span>
       </h4>
       <GetLGDMatchComponent

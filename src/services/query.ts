@@ -86,12 +86,14 @@ export const getImmediateChildren = async (entityId: BigInt) => {
 }
 
 export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
-    name = name.trim().toLowerCase();
+    name = name.trim().toLowerCase().replace("&", "and");
     const children = await getImmediateChildren(parentId);
     
     const fuse_options: IFuseOptions<any> = {
         includeScore: true,
         keys: ["name"],
+        threshold: 0.5,
+        ignoreLocation: true,
     }
     const fuse = new Fuse(children, fuse_options);
     let results = fuse.search(name);
@@ -100,7 +102,7 @@ export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
         score: v.score,
         refIndex: v.refIndex,
         match_type: "fuzzy",
-    })).filter(m => m.score <= 0.3)
+    }))
     console.log("fuzzy", name, results, children);
     return results;
 }

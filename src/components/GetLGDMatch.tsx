@@ -41,11 +41,8 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
       level_id: level,
       useParent: !!parent_id,
     }));
+    setResults(matches)
   }, [title, level, parent_id])
-
-  useEffect(() => {
-    setResults(matches);
-  }, [matches])
   
   const fetchMatches = async () => {
     const {
@@ -73,6 +70,12 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     }));
   };
 
+  const fetchMatchesOnEnterPress = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.code == "Enter") {
+      fetchMatches();
+    }
+  }
+
   useEffect(() => {
     (async () => {
       const res = await getLevels();
@@ -80,23 +83,11 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     })();
   }, []);
 
-  useEffect(() => {
-    setResults(matches)
-  }, [matches])
-
-  useEffect(() => {
-    setState({
-      title,
-      level_id: level,
-      useParent: !!parent_id,
-    })
-  }, [parent_id, title, level])
-
   return (
     <div className="p-2">
       <div className="mb-2">
         <div className="flex gap-1">
-          <input className="grow" type="text" onChange={handleChange} value={state.title} name="title" />
+          <input className="grow" type="text" onChange={handleChange} onKeyDown={fetchMatchesOnEnterPress} value={state.title} name="title" />
           <select onChange={handleChange} value={state.level_id} name="level_id">
             <option>Without Level</option>
             {levels.map((l) => (
