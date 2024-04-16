@@ -108,28 +108,29 @@ export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
 }
 
 export const getMatches = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null, withParents = false, useCommunityVariations = false) => {
-    const prepResponse = (matches: any[]) => {
-        return matches.map((r) => {
+    const prepResponse = async (matches: any[]) => {
+        return await Promise.all(matches.map(async (r) => {
             if (withParents) {
-                r["parents"] = getParents(r.id);
+                const parents = await getParents(r.id) 
+                r["parents"] = parents;
             }
             return r
-        })
+        }))
     }
 
     name = name.trim().toLowerCase();
     let matches = await getExactMatch(name, levelId, parentId);
     if (matches.length > 0) {
-        return prepResponse(matches);
+        return await prepResponse(matches);
     }
     
     matches = await getMatchesUsingVariations(name, levelId, parentId, useCommunityVariations)
     if (matches.length > 0 || parentId === null) {
-        return prepResponse(matches);
+        return await prepResponse(matches);
     }
 
     matches = await getFuzzyMatches(name, parentId);
-    return matches;
+    return await prepResponse(matches);
 }
 
 export const getBatchedMatches = async (payload: any[]) => {
