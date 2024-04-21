@@ -1,5 +1,6 @@
 import Fuse, { IFuseOptions } from "fuse.js";
 import { getDuckDB } from "./duckdb"
+import { lookUpCommunityReportedVariation } from "../api";
 
 const runQuery = async (q: string) => {
     const db = await getDuckDB();
@@ -129,6 +130,10 @@ export const getMatches = async (name: string, levelId: BigInt | null = null, pa
         return await prepResponse(matches);
     }
 
+    matches = await lookUpCommunityReportedVariation(name, levelId, parentId);
+    if (matches.length) {
+        return await prepResponse(matches);
+    }
     matches = await getFuzzyMatches(name, parentId);
     return await prepResponse(matches);
 }
