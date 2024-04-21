@@ -8,7 +8,7 @@ interface AddVariationProps {
 }
 
 
-export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation, node }) => {
+export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) => {
     const [state, setState] = useState<{ variation: string; email: string; }>({
         variation,
         email: ""

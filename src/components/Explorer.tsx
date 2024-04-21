@@ -11,12 +11,12 @@ export interface ExplorerProps {
 export const Explorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
   const renderNodes = (node: string): JSX.Element => {
     let neighbors: any = graph.outNeighbors(node);
-    neighbors = neighbors.map((neighbor) => renderNodes(neighbor));
+    neighbors = neighbors.map((neighbor: string) => renderNodes(neighbor));
 
     return (
       <ExplorerItem
         onClick={() => setActiveNode(node)}
-        attrs={graph.getNodeAttributes(node)}
+        attrs={graph.getNodeAttributes(node) as LGDNodeAttributes}
         key={node}
       >
         {neighbors}
@@ -47,9 +47,7 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
   attrs,
   children,
 }) => {
-  const hasMatches = !!attrs?.matches;
-  //   const matches = attrs?.matches;
-  const numMatches = hasMatches ? attrs.matches.length : 0;
+  const numMatches = !!attrs?.matches ? attrs?.matches?.length : 0;
 
   const getMatchColor = (numMatches: number): string => {
     if (numMatches === 0) {
@@ -64,11 +62,11 @@ export const ExplorerItem: FC<ExplorerItemProps> = ({
   const renderText = (
     <span>
       {attrs.title}
-      {hasMatches && attrs.matches.length > 1 && (
+      {!!attrs?.matches && attrs.matches.length > 1 && (
         <span className={getMatchColor(numMatches)}>{numMatches}</span>
       )}
-      {attrs?.unmatchedChildren > 0 && (
-        <span className={getMatchColor(attrs?.unmatchedChildren?.length || 0)}>
+      {attrs?.unmatchedChildren && attrs.unmatchedChildren > 0 && (
+        <span className={getMatchColor(attrs?.unmatchedChildren || 0)}>
           {attrs.unmatchedChildren}
         </span>
       )

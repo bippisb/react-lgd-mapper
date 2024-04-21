@@ -65,7 +65,7 @@ export const getColumnNames = async (tableName: string, c?: duckdb.AsyncDuckDBCo
     c = !c? await getDBConnection() : c;
     const first_row = await c.query(`SELECT * FROM ${tableName};`);
     c.close();
-    const columnNames = first_row.schema.fields.map(a => a.name);
+    const columnNames = first_row.schema.fields.map((a: any) => a.name);
     console.log(tableName, "columns", columnNames)
     return columnNames;
 }
@@ -79,7 +79,7 @@ export const getUniqueRecords = async (lgdColumns: string[]) => {
     ORDER BY ${lgdColumns.join(", ")};
     `)
     c.close();
-    const unique_records = unique_rows.toArray().map(a => a.toJSON());
+    const unique_records = unique_rows.toArray().map((a: any) => a.toJSON());
     console.log(unique_records);
     return unique_records;
 }

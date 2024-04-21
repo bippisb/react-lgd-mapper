@@ -10,6 +10,7 @@ export interface LGDNodeAttributes {
     code?: string;
     match?:ILGDMatch;
     matches?: ILGDMatch[];
+    unmatchedChildren?: number;
 }
 
 export interface ILGDMatch {

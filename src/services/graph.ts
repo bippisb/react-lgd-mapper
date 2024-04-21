@@ -19,7 +19,7 @@ export const getLGDColsInHierarchicalOrder = (hierarchy: Hierarchy) => {
         .map(([c]) => c);
 }
 
-export const buildLGDGraph = (records: object, hierarchy: Hierarchy) => {
+export const buildLGDGraph = (records: any, hierarchy: Hierarchy) => {
     const lgdColumns = getLGDColsInHierarchicalOrder(hierarchy);
     const graph = new DirectedGraph();
 
@@ -122,7 +122,7 @@ export const prepareUnmappedDataFrameCSV = (graph: DirectedGraph, hierarchy: Hie
         if (!!attrs?.match) {
             return "";
         }
-        let row = node.split(",").filter(a => isNaN(a));
+        let row = node.split(",").filter(a => isNaN(Number(a)));
         return row.join(",")
     };
 

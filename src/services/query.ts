@@ -1,6 +1,7 @@
 import Fuse, { IFuseOptions } from "fuse.js";
 import { getDuckDB } from "./duckdb"
 import { lookUpCommunityReportedVariation } from "../api";
+import { castPossibleBigIntToNumber } from "./utils";
 
 const runQuery = async (q: string) => {
     const db = await getDuckDB();
@@ -10,7 +11,7 @@ const runQuery = async (q: string) => {
     return t.toArray().map((a: any) => a.toJSON());
 }
 
-export const getExactMatch = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null) => {
+export const getExactMatch = async (name: string, levelId: BigInt | number | null = null, parentId: BigInt | number | null = null) => {
     name = name.trim().toLowerCase();
     const q = `
     SELECT entity.id, entity.name, entity.code, entity.level_id, 'exact' AS match_type
@@ -28,10 +29,10 @@ export const getExactMatch = async (name: string, levelId: BigInt | null = null,
 export const getLevels = async () => {
     const q = `SELECT * FROM level;`
     const results = await runQuery(q);
-    return results.filter(l => l.name !== "india");
+    return results.filter((l: any) => l.name !== "india");
 }
 
-export const getMatchesUsingVariations = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null, useCommunityVariations = false) => {
+export const getMatchesUsingVariations = async (name: string, levelId: BigInt | number | null = null, parentId: BigInt | number | null = null, useCommunityVariations = false) => {
     name = name.trim().toLowerCase();
     const buildQuery = (table: "variation" | "discoveredvariation") => `
     SELECT DISTINCT entity.id, entity.name, entity.code, entity.level_id, '${table}' as match_type
@@ -56,7 +57,7 @@ export const getMatchesUsingVariations = async (name: string, levelId: BigInt | 
     return results;
 }
 
-export const getParents = async (entityId: BigInt) => {
+export const getParents = async (entityId: BigInt | number) => {
     const q = `
     WITH RECURSIVE cte AS (
         SELECT ah.*
@@ -75,7 +76,7 @@ export const getParents = async (entityId: BigInt) => {
     return results;
 }
 
-export const getImmediateChildren = async (entityId: BigInt) => {
+export const getImmediateChildren = async (entityId: BigInt | number) => {
     const q = `
     SELECT DISTINCT e.*
     FROM entity e
@@ -86,7 +87,7 @@ export const getImmediateChildren = async (entityId: BigInt) => {
     return results;
 }
 
-export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
+export const getFuzzyMatches = async (name: string, parentId: BigInt | number) => {
     name = name.trim().toLowerCase().replace("&", "and");
     const children = await getImmediateChildren(parentId);
     
@@ -108,7 +109,7 @@ export const getFuzzyMatches = async (name: string, parentId: BigInt) => {
     return results;
 }
 
-export const getMatches = async (name: string, levelId: BigInt | null = null, parentId: BigInt | null = null, withParents = false, useCommunityVariations = false) => {
+export const getMatches = async (name: string, levelId: BigInt | number | null = null, parentId: BigInt | number | null = null, withParents = false, useCommunityVariations = false) => {
     const prepResponse = async (matches: any[]) => {
         return await Promise.all(matches.map(async (r) => {
             if (withParents) {
@@ -130,7 +131,7 @@ export const getMatches = async (name: string, levelId: BigInt | null = null, pa
         return await prepResponse(matches);
     }
 
-    matches = await lookUpCommunityReportedVariation(name, levelId, parentId);
+    matches = await lookUpCommunityReportedVariation(name, castPossibleBigIntToNumber(levelId), castPossibleBigIntToNumber(parentId));
     if (matches.length) {
         return await prepResponse(matches);
     }

@@ -1,7 +1,8 @@
-import { ChangeEvent, FC, useEffect, useState } from "react";
+import { ChangeEvent, FC, KeyboardEvent, useEffect, useState } from "react";
 import { getMatches, getLevels } from "../services/query";
-import { ILGDLevel, ILGDMatch, LevelName } from "../types";
+import { ILGDLevel, ILGDMatch } from "../types";
 import { MatchesTableView } from "./MatchesTableView";
+import { castPossibleBigIntToNumber } from "../services/utils";
 
 interface GetLGDMatchComponentProps {
   node?: string;
@@ -52,7 +53,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     } = state;
     const lvl = levels.find(v => v.name === level_id);
     const parentArg = useParent ? parent_id : null;
-    const results = await getMatches(title, lvl?.id, parentArg, true);
+    const results = await getMatches(title, lvl?.id, castPossibleBigIntToNumber(parentArg), true);
     setResults(results);
   };
   const handleChange = (
@@ -91,7 +92,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
           <select onChange={handleChange} value={state.level_id} name="level_id">
             <option>Without Level</option>
             {levels.map((l) => (
-              <option value={l.name} key={l.id}>
+              <option value={l.name} key={l.id.toString()}>
                 {l.name.replace("_", " ")}
               </option>
             ))}

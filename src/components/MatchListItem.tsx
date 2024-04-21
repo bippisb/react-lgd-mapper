@@ -27,7 +27,7 @@ const MatchListItem: FC<MatchListItemProps> = ({ match }) => (
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">Level</span>
-          <span>{match.level || LEVELS[match.level_id.toString()]}</span>
+          <span>{match.level || LEVELS[match.level_id.toString() as keyof typeof LEVELS]}</span>
         </div>
         <div className="flex flex-col">
           <span className="text-xs border-b-stone-600 border-b-[1px] border-dashed border-opacity-50">LGD</span>

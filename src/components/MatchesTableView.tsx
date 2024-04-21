@@ -19,7 +19,7 @@ export const MatchesTableView: FC<MatchesTableViewProps> = ({
   <div className={className}>
     {matches.map((m) => (
       <div
-        key={m.id}
+        key={m.id.toString()}
         onClick={() => onSelect(m)}
         className={match?.id === m.id ? "outline outline-offset-2 outline-blue-800" : ""}
       >
