@@ -89,7 +89,7 @@ export const loadLocalGovernmentDirectory = async (db: duckdb.AsyncDuckDB) => {
     const loadAsTable = async (tableName: string, url: string) => {
         return await c.query(`
         CREATE TABLE ${tableName} AS
-            SELECT * FROM 'http://localhost:5173${url}'
+            SELECT * FROM '${window.location.origin}${url}'
         `);
     }
     const tables = {
