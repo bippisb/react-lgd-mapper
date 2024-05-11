@@ -3,11 +3,6 @@ import duckdb_wasm from '@duckdb/duckdb-wasm/dist/duckdb-mvp.wasm?url';
 import mvp_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-mvp.worker.js?url';
 import duckdb_wasm_eh from '@duckdb/duckdb-wasm/dist/duckdb-eh.wasm?url';
 import eh_worker from '@duckdb/duckdb-wasm/dist/duckdb-browser-eh.worker.js?url';
-import adminHierarchyParquet from "../assets/adminhierarchy.parquet?url";
-import discoveredVariationParquet from "../assets/discoveredvariation.parquet?url";
-import entityParquet from "../assets/entity.parquet?url";
-import levelParquet from "../assets/level.parquet?url";
-import variationParquet from "../assets/variation.parquet?url";
 
 const MANUAL_BUNDLES: duckdb.DuckDBBundles = {
     mvp: {
@@ -93,11 +88,11 @@ export const loadLocalGovernmentDirectory = async (db: duckdb.AsyncDuckDB) => {
         `);
     }
     const tables = {
-        "entity": entityParquet,
-        "adminhierarchy": adminHierarchyParquet,
-        "variation": variationParquet,
-        "discoveredVariation": discoveredVariationParquet,
-        "level": levelParquet,
+        "entity": "/assets/entity.parquet",
+        "adminhierarchy": "/assets/adminhierarchy.parquet",
+        "variation": "/assets/variation.parquet",
+        "discoveredVariation": "/assets/discoveredvariation.parquet",
+        "level": "/assets/level.parquet",
     };
     for (let [key, value] of Object.entries(tables)) {
         const t = await loadAsTable(key, value);
