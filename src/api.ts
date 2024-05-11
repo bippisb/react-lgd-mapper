@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { LevelName, MatchItem } from './types';
 
-const baseURL = 'https://lgddev.indiadataportal.com';
+const baseURL = 'https://lgddevapi.indiadataportal.com';
 
 const axiosInstance: AxiosInstance = axios.create({
   baseURL,

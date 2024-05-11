@@ -7,7 +7,7 @@ import { computeUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
 import { EntityView } from "./components/Entity";
 import { LazyExplorer } from "./components/LazyExplorer";
 import { Notes } from "./components/Notes";
-import { getUniqueRecords } from "./services/duckdb";
+import { getDuckDB, getUniqueRecords } from "./services/duckdb";
 import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
 import { FileUpload } from "./components/FileUpload";
 
@@ -77,6 +77,14 @@ function App() {
     // @ts-ignore
     window.graph = graph;
   }
+
+  useEffect(() => {
+    (async () => {
+      // instantiate duckdb
+      await getDuckDB();
+    })()
+
+  }, [])
 
   return (
     <>
