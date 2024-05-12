@@ -28,11 +28,11 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) =>
     };
     const handleSubmit = async () => {
         const res = await addVariation(state.variation, String(entity_id), state.proposer_email)
-        if (res.status == 200) {
-            alert("Added Variation")
-        } else {
+        if (res.data?.status_code != 200) {
             alert("Couldn't add variation.")
             console.log(res)
+        } else {
+            alert("Added Variation")
         }
     }
     return (
