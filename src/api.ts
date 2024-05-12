@@ -51,7 +51,7 @@ export const addVariation = async (variation: string, entity_id: string, email: 
   const res = await axiosInstance.post("/add/variation", {
     variation, entity_id, email
   })
-  return res.data;
+  return res;
 }
 
 

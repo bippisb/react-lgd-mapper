@@ -9,9 +9,9 @@ interface AddVariationProps {
 
 
 export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) => {
-    const [state, setState] = useState<{ variation: string; email: string; }>({
+    const [state, setState] = useState<{ variation: string; proposer_email: string; }>({
         variation,
-        email: ""
+        proposer_email: ""
     });
 
     useEffect(() => {
@@ -27,25 +27,30 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) =>
         setState(state => ({ ...state, [key]: value }))
     };
     const handleSubmit = async () => {
-        const res = await addVariation(state.variation, String(entity_id), state.email)
-        alert("Added Variation")
-        console.log(res.data)
+        const res = await addVariation(state.variation, String(entity_id), state.proposer_email)
+        if (res.status == 200) {
+            alert("Added Variation")
+        } else {
+            alert("Couldn't add variation.")
+            console.log(res)
+        }
     }
     return (
         <div className="p-2 ">
             <input
                 className="w-full block mb-2 pl-2 px-[4px]"
-                placeholder="Name variation"
+                placeholder="Name Variation"
                 name={"variation"}
                 value={state.variation}
+                autoComplete="off"
                 onChange={handleChange}
                 type="text"
             />
             <input
                 className="w-full block pl-2 px-[4px]"
                 placeholder="Your email address"
-                name={"email"}
-                value={state.email}
+                name={"proposer_email"}
+                value={state.proposer_email}
                 onChange={handleChange}
                 type="email"
             />
