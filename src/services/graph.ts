@@ -69,7 +69,7 @@ const prepareHeader = (hierarchy: Hierarchy, prepColumnNames: (lvl: any) => stri
         copy[key]["column"] = key;
     }
     const levels = Object.values(copy);
-    levels.sort((a, b) => a.code - b.code);
+    levels.sort((a, b) => Number(a.code) - Number(b.code));
 
     const head = [];
     for (const lvl of levels) {
