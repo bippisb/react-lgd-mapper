@@ -10,6 +10,7 @@ import { Notes } from "./components/Notes";
 import { getDuckDB, getUniqueRecords } from "./services/duckdb";
 import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
 import { FileUpload } from "./components/FileUpload";
+import Sidebar from "./components/Sidebar";
 
 
 export type AppState =
@@ -89,7 +90,7 @@ function App() {
   return (
     <>
       <div className="bg-gray-300">
-        <header className="flex justify-between p-2">
+        <header className="flex justify-between p-2 ml-16">
           <h1 className="text-3xl font-bold flex justify-center">
             LGD Mapper
           </h1>
@@ -128,47 +129,51 @@ function App() {
             )}
           </div>
         </header>
-        <main className="grid grid-cols-3 gap-1 mx-1">
-          <div className=" bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
-            <DatasetUpload setFile={(f) => { resetState(); setFile(f); }} setColumnNames={setColumns} /* setUIState={setState} */ />
-            {columns !== null && (
-              <SelectLGDCols
-                columns={columns}
-                selectedCols={lgdCols}
-                onSelectionChange={setLgdCols}
-              />
-            )}
-            {lgdCols.length > 0 && (
-              <SelectColumnHierarchy
-                columns={lgdCols}
-                onHierarchyChange={setHierarchy}
-              />
-            )}
-          </div>
-          <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
-            {/* @ts-ignore */}
-            {graph !== null && (
-              <>
-                <div className="flex justify-between mb-1">
-                  {mappingProgress !== null && (<span className="algin-middle px-2">{(100 * mappingProgress).toFixed(2)} %</span>)}
-                  <button
-                    className="py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
-                    onClick={startMapping}
-                  >
-                    Fetch Matches
-                  </button>
-                </div>
-                <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
-              </>
-            )}
-          </div>
-          <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
-            {activeNode !== null && graph !== null && (
-              <EntityView node={activeNode} graph={graph} setGraph={setGraph} />
-            )}
+        <main>
+          <Sidebar open={!hierarchy}>
+            <div className=" bg-white bg-opacity-50 p-2 h-screen overflow-auto">
+              <DatasetUpload setFile={(f) => { resetState(); setFile(f); }} setColumnNames={setColumns} /* setUIState={setState} */ />
+              {columns !== null && (
+                <SelectLGDCols
+                  columns={columns}
+                  selectedCols={lgdCols}
+                  onSelectionChange={setLgdCols}
+                />
+              )}
+              {lgdCols.length > 0 && (
+                <SelectColumnHierarchy
+                  columns={lgdCols}
+                  onHierarchyChange={setHierarchy}
+                />
+              )}
+            </div>
+          </Sidebar>
+          <div className="grid grid-cols-2 gap-1 mx-1">
+            <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+              {/* @ts-ignore */}
+              {graph !== null ? (
+                <>
+                  <div className="flex justify-between mb-1">
+                    {mappingProgress !== null && (<span className="algin-middle px-2">{(100 * mappingProgress).toFixed(2)} %</span>)}
+                    <button
+                      className="py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
+                      onClick={startMapping}
+                    >
+                      Fetch Matches
+                    </button>
+                  </div>
+                  <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
+                </>
+              ) : <Notes />
+              }
+            </div>
+            <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+              {activeNode !== null && graph !== null && (
+                <EntityView node={activeNode} graph={graph} setGraph={setGraph} />
+              )}
+            </div>
           </div>
         </main>
-        <Notes />
       </div>
     </>
   );

@@ -36,7 +36,7 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
       <hr className="border-gray-600 border-1 my-1"/>
       <h3>Column Hierarchy</h3>
       <div className="p-2">
-        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400 align-bottom text-xs">
+        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500 align-bottom text-xs">
           <span>Column Name</span>
           <span>Administrative Level</span>
         </div>
@@ -76,16 +76,16 @@ export const SelectLGDLevel: FC<SelectLGDLevelProps> = ({
 }) => {
   const name = `lgdLevel${column}`;
   return (
-    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400">
+    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500">
       <label htmlFor={name} className="align-middle">{column}</label>
 
       <select
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="float-right"
+        className="float-right bg-gray-200"
       >
-        <option className="bg-gray-300" value="" defaultValue={value}>
+        <option value="" defaultValue={value}>
           Level
         </option>
         {levels.map((level) => (
