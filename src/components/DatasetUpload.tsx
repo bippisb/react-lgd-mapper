@@ -2,6 +2,7 @@ import { ChangeEvent, FC } from "react";
 import { loadDatasetAsTable } from "../services/duckdb";
 import { Tooltip } from "./Tooltip";
 import { FileUpload } from "./FileUpload";
+import { toast } from "react-toastify";
 
 interface DatasetUploaderProps {
   setFile: (file: File) => void;
@@ -15,7 +16,9 @@ export const DatasetUpload: FC<DatasetUploaderProps> = ({ setFile, setColumnName
 
     if (fileList && fileList.length > 0) {
       const file = fileList[0];
+      const tid = toast.loading("Loading dataset...");
       const columnNames = await loadDatasetAsTable(file);
+      toast.update(tid, { render: "Dataset loaded", type: "success", isLoading: false, autoClose: 2000 });
       setFile(file);
       setColumnNames(columnNames);
     }

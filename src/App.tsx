@@ -11,6 +11,8 @@ import { getDuckDB, getUniqueRecords } from "./services/duckdb";
 import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
 import { FileUpload } from "./components/FileUpload";
 import Sidebar from "./components/Sidebar";
+import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export type AppState =
@@ -51,13 +53,16 @@ function App() {
     }
 
     (async () => {
+      const tid = toast.loading("Getting unique entites...")
       const orderedLGDCols = getLGDColsInHierarchicalOrder(hierarchy);
       const records = await getUniqueRecords(orderedLGDCols);
+      toast.update(tid, { render: "Building LGD graph", type: "info", isLoading: true })
       console.log("loaded records", records.length)
       const lgdGraph = buildLGDGraph(records, hierarchy);
       console.log("built graph")
       setGraph(lgdGraph)
-    })();
+      toast.update(tid, { render: "Graph loaded", type: "success", isLoading: false, autoClose: 2000 })
+    })()
   }, [file, lgdCols, hierarchy]);
 
   const startMapping = async () => {
@@ -174,6 +179,7 @@ function App() {
             </div>
           </div>
         </main>
+        <ToastContainer position={"top-right"} />
       </div>
     </>
   );
