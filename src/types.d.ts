@@ -21,6 +21,7 @@ export interface ILGDMatch {
     level: string; // level name
     parents?: ILGDMatch[];
     match_type?: string;
+    score?: number; // fuzzy score
 }
 
 export interface ILGDLevel {
