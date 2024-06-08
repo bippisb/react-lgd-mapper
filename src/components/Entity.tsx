@@ -2,7 +2,7 @@ import { DirectedGraph } from "graphology";
 import { FC, useMemo } from "react";
 import { ILGDMatch } from "../types";
 import { GetLGDMatchComponent } from "./GetLGDMatch";
-import { getParentNodeId } from "../services/lgd";
+import { getParentNodeId, remapEntities } from "../services/lgd";
 import MatchListItem from "./MatchListItem";
 import { AddVariation } from "./AddVariation";
 
@@ -16,27 +16,25 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
   const attrs = useMemo(() => graph.getNodeAttributes(node), [graph, node]);
   const parent_id = useMemo(() => getParentNodeId(node, graph), [graph, node]);
 
-  const isMatched = !!attrs?.match;
-
-  const setMatch = useMemo(() => (match: ILGDMatch | undefined) => {
+  const setMatch = useMemo(() => async (match: ILGDMatch | undefined) => {
     graph.mergeNodeAttributes(node, {
       match,
     });
 
-    if (!isMatched) {
-      // update unmatched entities count
-      let parent = graph.inNeighbors(node)[0]
-      do {
-        if (parent) {
-          let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
-          graph.mergeNodeAttributes(parent, {
-            unmatchedChildren: unmatchedChildren - 1,
-          });
+    graph = await remapEntities(graph, node);
 
-          parent = graph.inNeighbors(parent)[0];
-        }
-      } while (parent);
-    }
+    // update unmatched entities count
+    let parent = graph.inNeighbors(node)[0]
+    do {
+      if (parent) {
+        let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
+        graph.mergeNodeAttributes(parent, {
+          unmatchedChildren: unmatchedChildren - 1,
+        });
+
+        parent = graph.inNeighbors(parent)[0];
+      }
+    } while (parent);
 
     setGraph(graph.copy());
   }, [graph, node]);

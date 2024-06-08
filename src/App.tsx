@@ -3,7 +3,7 @@ import { DatasetUpload } from "./components/DatasetUpload";
 import SelectLGDCols from "./components/SelectLGDCols";
 import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy";
 import { buildLGDGraph, getLGDColsInHierarchicalOrder } from "./services/graph";
-import { computeUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
+import { computeUnmatchedChildren, countTotalUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
 import { EntityView } from "./components/Entity";
 import { LazyExplorer } from "./components/LazyExplorer";
 import { Notes } from "./components/Notes";
@@ -84,6 +84,13 @@ function App() {
     // @ts-ignore
     window.graph = graph;
   }
+
+  useEffect(() => {
+    if (graph !== null) {
+      const count = countTotalUnmatchedChildren(graph);
+      setMappingProgress((graph.order - count)/ graph.order);
+    }
+  }, [graph])
 
   useEffect(() => {
     (async () => {
