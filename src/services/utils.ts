@@ -17,3 +17,17 @@ export const getColumnNames = async (file: File, nChars = 10_000): Promise<strin
         reader.readAsText(blob)
     })
 }
+
+export const castPossibleBigIntToNumber = (v: BigInt | null | undefined | number): number | null => {
+    /** Duck DB reads numbers as BigInt by default. The apps entire logic was already built on numbers not bigints.
+     * This funcion provides a quickfix till DuckDB is configured to not use bigints.
+     */
+    switch (typeof v) {
+        case "number":
+            return v
+        case "bigint":
+            return Number(v)
+        default:
+            return null
+    }
+}

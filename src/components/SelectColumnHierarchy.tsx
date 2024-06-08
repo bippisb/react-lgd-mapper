@@ -1,5 +1,5 @@
 import { FC, useState, useEffect } from "react";
-import { getLevels } from "../api";
+import { getLevels } from "../services/query";
 import { ILGDLevel } from "../types";
 
 export type Hierarchy = { [lgdCol: string]: any };
@@ -33,10 +33,10 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
 
   return (
     <div>
-      <hr className="border-gray-600 border-1 my-1"/>
+      <hr className="border-gray-600 border-1 my-1" />
       <h3>Column Hierarchy</h3>
       <div className="p-2">
-        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400 align-bottom text-xs">
+        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500 align-bottom text-xs">
           <span>Column Name</span>
           <span>Administrative Level</span>
         </div>
@@ -50,12 +50,14 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
               key={col}
             />
           ))}
-        <button
-          className="m-4 float-right bg-gray-600 border-gray-700 border-2 text-white hover:text-gray-700 hover:bg-gray-100  rounded-md py-1 px-4"
-          onClick={handleSubmit}
-        >
-          Start Mapping
-        </button>
+        <div className="flex justify-end">
+          <button
+            className="m-4 mr-0 mb-1 bg-raspberry-rose  text-white hover:bg-raspberry-rose-lighter  rounded-md py-1 px-4"
+            onClick={handleSubmit}
+          >
+            Start Mapping
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -76,16 +78,16 @@ export const SelectLGDLevel: FC<SelectLGDLevelProps> = ({
 }) => {
   const name = `lgdLevel${column}`;
   return (
-    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-400">
+    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500">
       <label htmlFor={name} className="align-middle">{column}</label>
 
       <select
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="float-right"
+        className="float-right bg-gray-200"
       >
-        <option className="bg-gray-300" value="" defaultValue={value}>
+        <option value="" defaultValue={value}>
           Level
         </option>
         {levels.map((level) => (

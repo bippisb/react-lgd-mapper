@@ -5,24 +5,20 @@ import type { ExplorerProps } from "./Explorer";
 export const LazyExplorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
     const rootNodes = useMemo(() => getRootNodes(graph), [graph]);
     return (
-        <div>
-            <hr className="border-gray-600 border-1 my-1" />
-            <div className="">
-                {
-                    rootNodes.map(node => (
-                        <LazyExplorerItem
-                            node={node}
-                            setActiveNode={setActiveNode}
-                            graph={graph}
-                            key={node}
-                        />
-                    ))
-                }
+        <div className="bg-gray-800 text-gray-100 rounded-md shadow-md  h-[90vh] overflow-auto">
+            <div className="px-4 py-2">
+                {rootNodes.map((node) => (
+                    <LazyExplorerItem
+                        node={node}
+                        setActiveNode={setActiveNode}
+                        graph={graph}
+                        key={node}
+                    />
+                ))}
             </div>
         </div>
-    )
-}
-
+    );
+};
 
 interface LazyExplorerItemProps extends ExplorerProps {
     node: string;
@@ -31,7 +27,7 @@ interface LazyExplorerItemProps extends ExplorerProps {
 export const LazyExplorerItem: FC<LazyExplorerItemProps> = ({
     node,
     graph,
-    setActiveNode
+    setActiveNode,
 }) => {
     const [open, setOpen] = useState(false);
     const attrs = useMemo(() => graph.getNodeAttributes(node), [node, graph]);
@@ -39,46 +35,56 @@ export const LazyExplorerItem: FC<LazyExplorerItemProps> = ({
 
     const handleClick = () => {
         console.log(attrs);
+        // @ts-ignore
+        window.sg = graph.subgraph;
         setActiveNode(node);
-    }
+    };
 
     return (
-        <div className="px-2 border-b-2 border-l-2 border-r-2 border-gray-500 border-dotted border-opacity-50">
-            <div className="flex justify-between">
-                <span onClick={handleClick} className={attrs?.match ? "" : "text-rose-500"}>
+        <div className="border-b border-gray-700 last:border-none ">
+            <div className="flex justify-between items-center py-2">
+                <span
+                    onClick={handleClick}
+                    className={`cursor-pointer ${
+                        attrs?.match ? "" : "text-rose-500"
+                    }`}
+                >
                     {Boolean(attrs.title) ? attrs.title : "<NA>"}
                 </span>
-                <div>
-                    {attrs?.matches?.length > 1 &&
-                        (
-                            <span className="align middle border-[1px] border-blue-400 bg-blue-100 rounded-lg text-xs p-[2px] text-blue-600">{attrs.matches.length}</span>
-                        )
-                    }
-                    {attrs?.unmatchedChildren > 0 &&
-                        (
-                            <span className="align-middle border-[1px] rounded-lg bg-rose-100 border-rose-400 text-xs p-[2px] text-rose-600">{String(attrs?.unmatchedChildren).padStart(2, "0")}</span>
-                        )
-                    }
+                <div className="flex items-center">
+                    {attrs?.matches?.length > 1 && (
+                        <span className="inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-blue-600 bg-blue-100 rounded-full">
+                            {attrs.matches.length}
+                        </span>
+                    )}
+                    {attrs?.unmatchedChildren > 0 && (
+                        <span className="inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-rose-600 bg-rose-100 rounded-full">
+                            {String(attrs?.unmatchedChildren).padStart(2, "0")}
+                        </span>
+                    )}
 
                     {neighbors.length > 0 && (
-                        <button onClick={() => setOpen(state => !state)}>
+                        <button
+                            onClick={() => setOpen((state) => !state)}
+                            className="text-gray-400 hover:text-gray-200 transition-colors duration-200"
+                        >
                             {open ? "^" : ">"}
                         </button>
                     )}
                 </div>
             </div>
-            {
-                open && neighbors.length > 0 && (
-                    neighbors.map(neighbor => (
+            {open && neighbors.length > 0 && (
+                <div className="pl-4">
+                    {neighbors.map((neighbor) => (
                         <LazyExplorerItem
                             node={neighbor}
                             setActiveNode={setActiveNode}
                             graph={graph}
                             key={neighbor}
                         />
-                    ))
-                )
-            }
+                    ))}
+                </div>
+            )}
         </div>
-    )
-}
+    );
+};

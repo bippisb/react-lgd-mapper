@@ -30,7 +30,7 @@ const SelectLGDCols: FC<SelectLGDColsProps> = ({
       </h3>
       <div className="max-h-60 overflow-auto border-black border-1 p-2">
         {
-          <div className="bg-white p-1">
+          <div className="bg-gray-200 p-1">
             {columns.map((column) => (
               <label key={column} className="block ml-3">
                 <input

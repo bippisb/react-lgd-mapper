@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Hierarchy } from "../components/SelectColumnHierarchy";
 import { DirectedGraph } from "graphology";
-import { getRootNodes, prepareMappedDataFrameCSV, prepareUnmappedDataFrameCSV } from "./graph";
+import { prepareMappedDataFrameCSV, prepareUnmappedDataFrameCSV } from "./graph";
 
 interface IAppState {
     columns: string[] | null;
@@ -37,17 +37,17 @@ export const useAppState = create<IAppState>(set => ({
     })
 }))
 
-interface IGraph {
+interface IGraphState {
     graph: DirectedGraph | null;
     setGraph: (g: DirectedGraph) => void;
 }
 
-export const useGraph = create<IGraph>(set => ({
+export const useGraph = create<IGraphState>(set => ({
     graph: null,
     setGraph: (g: DirectedGraph) => set({ graph: g }),
 }))
 
-export const serializeState = (appState: IAppState, graphState: IGraph) => ({
+export const serializeState = (appState: IAppState, graphState: IGraphState) => ({
     columns: appState.columns,
     lgdCols: appState.lgdCols,
     mappingProgress: appState.mappingProgress,
@@ -73,9 +73,10 @@ export const downloadText = (text: string, fileName: string, type: string) => {
     }, 0);
 }
 
-export const exportAppState = (appState: IAppState, graphState: IGraph) => {
+export const exportAppState = (appState: IAppState, graphState: IGraphState) => {
     const state = serializeState(appState, graphState);
-    const json = JSON.stringify(state);
+    const replacer = (_: any, v: any) => typeof v == "bigint"? v.toString() : v;
+    const json = JSON.stringify(state, replacer);
     downloadText(json, "lgd_mapper_app_state.json", "application/json")
 }
 

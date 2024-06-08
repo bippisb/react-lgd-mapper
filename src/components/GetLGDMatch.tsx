@@ -1,7 +1,8 @@
-import { ChangeEvent, FC, useEffect, useState } from "react";
-import { getMatches, getLevels } from "../api";
-import { ILGDLevel, ILGDMatch, LevelName } from "../types";
+import { ChangeEvent, FC, KeyboardEvent, useEffect, useState } from "react";
+import { getMatches, getLevels } from "../services/query";
+import { ILGDLevel, ILGDMatch } from "../types";
 import { MatchesTableView } from "./MatchesTableView";
+import { castPossibleBigIntToNumber } from "../services/utils";
 
 interface GetLGDMatchComponentProps {
   node?: string;
@@ -35,6 +36,15 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     useParent: !!parent_id,
   });
 
+  useEffect(() => {
+    setState(({
+      title,
+      level_id: level,
+      useParent: !!parent_id,
+    }));
+    setResults(matches)
+  }, [title, level, parent_id])
+
   const fetchMatches = async () => {
     const {
       title,
@@ -42,9 +52,8 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
       useParent
     } = state;
     const lvl = levels.find(v => v.name === level_id);
-    const level_name = lvl?.name as LevelName;
     const parentArg = useParent ? parent_id : null;
-    const results = await getMatches(title, level_name, parentArg, true);
+    const results = await getMatches(title, lvl?.id, castPossibleBigIntToNumber(parentArg), true);
     setResults(results);
   };
   const handleChange = (
@@ -62,6 +71,12 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     }));
   };
 
+  const fetchMatchesOnEnterPress = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.code == "Enter") {
+      fetchMatches();
+    }
+  }
+
   useEffect(() => {
     (async () => {
       const res = await getLevels();
@@ -69,41 +84,51 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     })();
   }, []);
 
-  useEffect(() => {
-    setResults(matches)
-  }, [matches])
-
-  useEffect(() => {
-    setState({
-      title,
-      level_id: level,
-      useParent: !!parent_id,
-    })
-  }, [parent_id, title, level])
-
   return (
-    <div className="p-2">
-      <div className="mb-2">
-        <div className="flex gap-1">
-          <input className="grow" type="text" onChange={handleChange} value={state.title} name="title" />
-          <select onChange={handleChange} value={state.level_id} name="level_id">
+    <div className="p-2 bg-gray-800 rounded-md shadow-md">
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <input
+            className="w-full px-4 py-2 bg-gray-700 text-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="text"
+            onChange={handleChange}
+            onKeyDown={fetchMatchesOnEnterPress}
+            value={state.title}
+            name="title"
+            placeholder="Search..."
+          />
+          <select
+            className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={handleChange}
+            value={state.level_id}
+            name="level_id"
+          >
             <option>Without Level</option>
             {levels.map((l) => (
-              <option value={l.name} key={l.id}>
+              <option value={l.name} key={l.id.toString()}>
                 {l.name.replace("_", " ")}
               </option>
             ))}
           </select>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center mt-2">
           {!!parent_id && (
-            <div>
-              <input type="checkbox" onChange={handleChange} checked={state.useParent} name="useParent" />
-              <label htmlFor="useParent" className="text-xs">Look for matches within the mapped parent entity</label>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                onChange={handleChange}
+                checked={state.useParent}
+                name="useParent"
+                id="useParent"
+                className="mr-2 text-blue-500 focus:ring-blue-500"
+              />
+              <label htmlFor="useParent" className="text-xs text-gray-400">
+                Look for matches within the mapped parent entity
+              </label>
             </div>
           )}
           <button
-            className="text-white bg-gray-700 px-2 mt-1"
+            className="px-4 py-2 bg-amaranth text-white font-semibold rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
             type="button"
             onClick={fetchMatches}
           >
@@ -111,17 +136,20 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
           </button>
         </div>
       </div>
-      {results === null ? "" :
-        results.length === 0 ?
-          (<p className="text-sm text-gray-600 font-medium">No matches found for '{state.title}'.</p>)
-          : (
-            <MatchesTableView
-              matches={results}
-              match={match}
-              node="get_matches"
-              onSelect={onSelect}
-            />
-          )}
+      {results === null ? (
+        ""
+      ) : results.length === 0 ? (
+        <p className="text-sm text-gray-400">
+          No matches found for '{state.title}'.
+        </p>
+      ) : (
+        <MatchesTableView
+          matches={results}
+          match={match}
+          node="get_matches"
+          onSelect={onSelect}
+        />
+      )}
     </div>
   );
 };

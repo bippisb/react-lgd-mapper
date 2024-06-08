@@ -12,12 +12,15 @@ export const compareNodesByLevel = (a: any, b: any) => {
     return 0
 }
 
-export const buildLGDGraph = (records: Map<string, string>[], hierarchy: Hierarchy) => {
-    const lgdColumns = Object.entries(hierarchy)
+export const getLGDColsInHierarchicalOrder = (hierarchy: Hierarchy) => {
+    return Object.entries(hierarchy)
         .map(([col, lvl]) => ([col, lvl.id]))
         .sort(compareNodesByLevel)
         .map(([c]) => c);
+}
 
+export const buildLGDGraph = (records: any, hierarchy: Hierarchy) => {
+    const lgdColumns = getLGDColsInHierarchicalOrder(hierarchy);
     const graph = new DirectedGraph();
 
     for (const record of records) {
@@ -25,12 +28,12 @@ export const buildLGDGraph = (records: Map<string, string>[], hierarchy: Hierarc
         for (let i = 0; i < lgdColumns.length; i++) {
             const col = lgdColumns[i];
             const lvl = hierarchy[col];
-            const title = record.get(col) as string;
+            const title = record[col] as string;
             const node = Array.from({ length: i + 1 }, (_, i) => i)
                 .reduce((level, i) => {
                     const col: string = lgdColumns[i];
                     const lvl: { id: string } = hierarchy[col];
-                    const name: string[] = [record.get(col) as string, lvl.id];
+                    const name: string[] = [record[col] as string, lvl.id];
                     // @ts-ignore
                     level.push(...name)
                     return level
@@ -66,7 +69,7 @@ const prepareHeader = (hierarchy: Hierarchy, prepColumnNames: (lvl: any) => stri
         copy[key]["column"] = key;
     }
     const levels = Object.values(copy);
-    levels.sort((a, b) => a.code - b.code);
+    levels.sort((a, b) => Number(a.code) - Number(b.code));
 
     const head = [];
     for (const lvl of levels) {
@@ -119,7 +122,7 @@ export const prepareUnmappedDataFrameCSV = (graph: DirectedGraph, hierarchy: Hie
         if (!!attrs?.match) {
             return "";
         }
-        let row = node.split(",").filter(a => isNaN(a));
+        let row = node.split(",").filter(a => isNaN(Number(a)));
         return row.join(",")
     };
 

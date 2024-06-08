@@ -1,5 +1,5 @@
 import { DirectedGraph } from "graphology";
-import { getBatchedMatches, getMatches } from "../api";
+import { getMatches, getBatchedMatches } from "../services/query";
 import { LevelName } from "../types";
 
 
@@ -47,19 +47,47 @@ export const computeUnmatchedChildren = (graph: DirectedGraph) => {
     return graph
 }
 
+export const countTotalUnmatchedChildren = (graph: DirectedGraph) => {
+    let count = 0
+    for (const node of graph.nodes()) {
+        const unmatchedChildren = countUnmatchedChildren(node, graph);
+        count += unmatchedChildren
+    }
+    return count
+}
+
 export const lgdMapGraph = async (graph: DirectedGraph) => {
     for (const node of graph.nodes()) {
         const attrs = graph.getNodeAttributes(node);
         if (!!attrs.title) {
             const parent_id = getParentNodeId(node, graph);
             console.log(node, parent_id)
-            const matches = await getMatches(attrs.title, attrs.level_name, parent_id);
+            const matches = await getMatches(attrs.title, attrs.level_id, parent_id);
             graph.mergeNodeAttributes(node, {
                 matches,
                 // Matched if only a single match is found,
                 match: matches.length === 1 ? matches[0] : undefined,
             });
         }
+    }
+    return graph
+}
+
+export const remapEntities = async (graph: DirectedGraph, node: string) => {
+    const children = graph.outNeighbors(node);
+    const unmappedChildren = children.filter(child => !graph.getNodeAttribute(child, "match"));
+    for (const child of unmappedChildren) {
+        const attrs = graph.getNodeAttributes(child);
+        const parent_id = getParentNodeId(child, graph);
+        const matches = await getMatches(attrs.title, attrs.level_id, parent_id);
+        graph.mergeNodeAttributes(child, {
+            matches,
+            // Matched if only a single match is found,
+            match: matches.length === 1 ? matches[0] : undefined,
+        });
+    }
+    for (const child of unmappedChildren) {
+        graph = await remapEntities(graph, child);
     }
     return graph
 }
@@ -82,12 +110,12 @@ export const lgdMapInBatches = async (
         for (let i = 0; i < nodes.length; i += batchSize) {
             const batch = nodes.slice(i, i + batchSize);
             const payload = batch.map(node => {
-                const { title, level_name } = graph.getNodeAttributes(node);
+                const { title, level_id } = graph.getNodeAttributes(node);
                 const parent_id = getParentNodeId(node, graph);
 
                 return {
                     name: Boolean(title) ? title : "",
-                    level: level_name,
+                    level_id: level_id,
                     parent_id,
                 }
             })
@@ -97,7 +125,7 @@ export const lgdMapInBatches = async (
                 const m = matches[j];
                 graph.mergeNodeAttributes(n, {
                     matches: m,
-                    match: m?.length === 1 ? m[0] : undefined,
+                    match: m?.filter(i => i?.match_type !== "fuzzy")?.length === 1 ? m[0] : undefined,
                 });
             }
             nFetched = i + batch.length;
