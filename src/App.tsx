@@ -106,7 +106,7 @@ function App() {
         <header className="flex justify-between items-center bg-gray-700">
         </header>
         <main className="flex">
-          <Sidebar open={!hierarchy} className="bg-gray-700">
+          <Sidebar open={!hierarchy}>
             <div className="bg-white bg-opacity-50 p-4 h-screen overflow-auto">
               <div>
                 <div className="flex">
