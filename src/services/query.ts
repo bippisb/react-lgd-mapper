@@ -90,7 +90,7 @@ export const getImmediateChildren = async (entityId: BigInt | number) => {
 export const getFuzzyMatches = async (name: string, parentId: BigInt | number) => {
     name = name.trim().toLowerCase().replace("&", "and");
     const children = await getImmediateChildren(parentId);
-    
+
     const fuse_options: IFuseOptions<any> = {
         includeScore: true,
         keys: ["name"],
@@ -113,7 +113,7 @@ export const getMatches = async (name: string, levelId: BigInt | number | null =
     const prepResponse = async (matches: any[]) => {
         return await Promise.all(matches.map(async (r) => {
             if (withParents) {
-                const parents = await getParents(r.id) 
+                const parents = await getParents(r.id)
                 r["parents"] = parents;
             }
             return r
@@ -125,9 +125,9 @@ export const getMatches = async (name: string, levelId: BigInt | number | null =
     if (matches.length > 0) {
         return await prepResponse(matches);
     }
-    
+
     matches = await getMatchesUsingVariations(name, levelId, parentId, useCommunityVariations)
-    if (matches.length > 0 || parentId === null) {
+    if (matches.length > 0) {
         return await prepResponse(matches);
     }
 
@@ -135,6 +135,10 @@ export const getMatches = async (name: string, levelId: BigInt | number | null =
     if (matches.length) {
         return await prepResponse(matches);
     }
+    if (parentId === null) {
+        return [];
+    }
+
     matches = await getFuzzyMatches(name, parentId);
     return await prepResponse(matches);
 }
