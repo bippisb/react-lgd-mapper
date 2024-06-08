@@ -42,7 +42,7 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) =>
                 placeholder="Name Variation"
                 name="variation"
                 value={state.variation}
-                autoComplete="off"
+                autoComplete="new-password"
                 onChange={handleChange}
                 type="text"
             />
