@@ -32,7 +32,7 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
           graph.mergeNodeAttributes(parent, {
             unmatchedChildren: unmatchedChildren - 1,
           });
-  
+
           parent = graph.inNeighbors(parent)[0];
         }
       } while (parent);
@@ -43,11 +43,12 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
 
 
   return (
-    <div>
-      <h4 className="px-2 flex gap-2">
-        <span className="italic">{attrs.level_name}</span>
-        <span className="font-bold">{attrs.title}</span>
+    <div className="p-2 h-[95vh] overflow-auto">
+      <h4 className="flex items-center gap-2 mb-1">
+        <span className="italic text-gray-600">{attrs.level_name}</span>
+        <span className="font-bold text-gray-800">{attrs.title}</span>
       </h4>
+
       <GetLGDMatchComponent
         title={attrs.title}
         level={attrs.level_name}
@@ -56,27 +57,28 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
         match={attrs?.match}
         matches={attrs?.matches}
       />
-      {
-        attrs?.match && (
-          <>
-            <hr className="border border-b-2 border-gray-700 my-2" />
-            <h5 className="text-xs flex justify-between">
-              <span className="pl-1">Final Match</span>
-              <button
-                className="px-3 font-semibold text-sm bg-red-300 text-red-800 border border-slate-300 shadow-sm align-middle hover:bg-red-400 hover:text-red-900"
-                onClick={() => setMatch(undefined)}
-              >
-                x
-              </button>
-            </h5>
-            <div className="border-2 border-stone-400 border-opacity-40">
-
-              <MatchListItem match={attrs.match} />
-              <AddVariation node={node} entity_id={attrs.match.id} variation={attrs.title} />
-            </div>
-          </>
-        )
-      }
+      {attrs?.match && (
+        <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
+          <div className="flex justify-between items-center mb-2">
+            <h5 className="text-xs text-gray-400">Final Match</h5>
+            <button
+              className="px-3 py-1 bg-amaranth-stronger text-white font-semibold rounded-sm shadow-md hover:bg-amaranth-strongest transition-colors duration-200"
+              onClick={() => setMatch(undefined)}
+            >
+              x
+            </button>
+          </div>
+          <div className="">
+            <MatchListItem match={attrs.match} />
+            <div className="p-1"></div>
+            <AddVariation
+              node={node}
+              entity_id={attrs.match.id}
+              variation={attrs.title}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

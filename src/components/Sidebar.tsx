@@ -15,7 +15,7 @@ const Sidebar: FC<{ children: any, open: boolean }> = ({ children, open }) => {
         <div className="flex">
             {/* Toggle Button */}
             <button
-                className={`fixed top-4 ${isOpen ? "left-72" : "left-4"} z-50 flex items-center justify-center w-10 h-10 rounded-full bg-gray-800 text-white focus:outline-none transition-transform duration-300 transform ${isOpen ? 'translate-x-2' : 'translate-x-0'}`}
+                className={`fixed top-4 ${isOpen ? "left-72" : "left-4"} z-50 flex items-center justify-center w-10 h-10 rounded-full bg-raspberry-rose text-white focus:outline-none transition-transform duration-300 transform ${isOpen ? 'translate-x-2' : 'translate-x-0'}`}
                 onClick={toggleSidebar}
             >
                 {isOpen ? <CloseIcon /> : <MenuIcon />}
@@ -27,7 +27,7 @@ const Sidebar: FC<{ children: any, open: boolean }> = ({ children, open }) => {
                     }`}
 
             >
-                
+                <h1 className='p-1 text-center text-white'>LGD Mapper</h1>
                 {children}
 
             </div>

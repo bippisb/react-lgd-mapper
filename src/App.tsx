@@ -12,6 +12,7 @@ import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadApp
 import { FileUpload } from "./components/FileUpload";
 import Sidebar from "./components/Sidebar";
 import { ToastContainer, toast } from "react-toastify";
+import { Tooltip } from "./components/Tooltip";
 import 'react-toastify/dist/ReactToastify.css';
 
 
@@ -94,49 +95,23 @@ function App() {
 
   return (
     <>
-      <div className="bg-gray-300">
-        <header className="flex justify-between p-2 ml-16">
-          <h1 className="text-3xl font-bold flex justify-center">
-            LGD Mapper
-          </h1>
-          <div className="grid grid-cols-2 gap-2 divide-x divide-stone-400">
-            <div>
-              <div className="text-xs">Import app state</div>
-              <FileUpload handleChange={importAppState} accept=".json" />
-            </div>
-            {graph !== null && (
-              <div className="pl-2">
-                <div className="flex flex-row gap-2">
-                  <button
-                    className="text-gray-50 px-2 text-sm bg-cyan-900 border-2 border-cyan-800"
-                    onClick={() => exportAppState(appState, graphState)}>
-                    App State
-                  </button>
-                  <div>
-                    <div className="text-sm bg-gray-600 text-gray-50 text-center">DataFrame</div>
-                    <div>
-                      <button
-                        className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
-                        onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
-                      >
-                        Mapped
-                      </button>
-                      <button
-                        className="px-2 text-gray-50 text-sm bg-cyan-900 border-2 border-cyan-800"
-                        onClick={() => exportUnMappedDataFrame(graph, appState.hierarchy!)}
-                      >
-                        Unmapped
-                      </button>
-                    </div>
-                  </div>
+      <div className="bg-gray-800 min-h-screen">
+        <header className="flex justify-between items-center bg-gray-700">
+        </header>
+        <main className="flex">
+          <Sidebar open={!hierarchy} className="bg-gray-700">
+            <div className="bg-white bg-opacity-50 p-4 h-screen overflow-auto">
+              <div>
+                <div className="flex">
+                  <label className="mb-1 mr-1 text-base font-medium text-gray-900 ">
+                    Import App State
+                  </label>
+                  <Tooltip text="Upload a previously exported app state to continue your mapping process." />
+                </div>
+                <div className="p-2">
+                  <FileUpload handleChange={importAppState} accept=".json" />
                 </div>
               </div>
-            )}
-          </div>
-        </header>
-        <main>
-          <Sidebar open={!hierarchy}>
-            <div className=" bg-white bg-opacity-50 p-2 h-screen overflow-auto">
               <DatasetUpload setFile={(f) => { resetState(); setFile(f); }} setColumnNames={setColumns} /* setUIState={setState} */ />
               {columns !== null && (
                 <SelectLGDCols
@@ -151,17 +126,46 @@ function App() {
                   onHierarchyChange={setHierarchy}
                 />
               )}
+              {graph !== null && (
+                <div>
+                  <div className="flex flex-col">
+                    <div className="mb-1 mr-1 text-base font-medium text-gray-900">Export</div>
+                    <button
+                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
+                      onClick={() => exportAppState(appState, graphState)}
+                    >
+                      App State
+                    </button>
+                    <button
+                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
+                      onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
+                    >
+                      Mapped Rows
+                    </button>
+                    <button
+                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
+                      onClick={() => exportUnMappedDataFrame(graph, appState.hierarchy!)}
+                    >
+                      Unmapped Rows
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </Sidebar>
-          <div className="grid grid-cols-2 gap-1 mx-1">
-            <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+          <div className="grid grid-cols-2 gap-1 p-4 flex-grow">
+            <div className="bg-white bg-opacity-50 p-1 rounded-md shadow-md">
               {/* @ts-ignore */}
               {graph !== null ? (
                 <>
-                  <div className="flex justify-between mb-1">
-                    {mappingProgress !== null && (<span className="algin-middle px-2">{(100 * mappingProgress).toFixed(2)} %</span>)}
+                  <div className="flex justify-end items-center mb-1 sticky top-0">
+                    {mappingProgress !== null && (
+                      <span className="px-2 py-1 text-white rounded-md">
+                        {(100 * mappingProgress).toFixed(2)} %
+                      </span>
+                    )}
                     <button
-                      className="py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
+                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
                       onClick={startMapping}
                     >
                       Fetch Matches
@@ -169,10 +173,11 @@ function App() {
                   </div>
                   <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
                 </>
-              ) : <Notes />
-              }
+              ) : (
+                <Notes />
+              )}
             </div>
-            <div className="bg-white bg-opacity-50 p-2 h-screen max-h-[90%] overflow-auto">
+            <div className="bg-white bg-opacity-50 p-1 rounded-md shadow-md">
               {activeNode !== null && graph !== null && (
                 <EntityView node={activeNode} graph={graph} setGraph={setGraph} />
               )}

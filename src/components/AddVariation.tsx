@@ -36,26 +36,26 @@ export const AddVariation: FC<AddVariationProps> = ({ entity_id, variation }) =>
         }
     }
     return (
-        <div className="p-2 ">
+        <div className="p-2 bg-gray-800 rounded-md shadow-md">
             <input
-                className="w-full block mb-2 pl-2 px-[4px]"
+                className="w-full mb-4 px-4 py-2 bg-gray-700 text-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Name Variation"
-                name={"variation"}
+                name="variation"
                 value={state.variation}
                 autoComplete="off"
                 onChange={handleChange}
                 type="text"
             />
             <input
-                className="w-full block pl-2 px-[4px]"
+                className="w-full mb-4 px-4 py-2 bg-gray-700 text-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Your email address"
-                name={"proposer_email"}
+                name="proposer_email"
                 value={state.proposer_email}
                 onChange={handleChange}
                 type="email"
             />
             <button
-                className="m-1 py-1 px-2 font-semibold text-sm bg-white text-slate-700 border border-slate-300 rounded-md shadow-sm hover:text-gray-700 hover:bg-gray-100"
+                className="w-full py-2 px-4 bg-amaranth text-white font-semibold rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
                 onClick={handleSubmit}
             >
                 Suggest Variation

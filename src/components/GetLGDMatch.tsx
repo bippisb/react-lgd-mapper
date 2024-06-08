@@ -44,7 +44,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     }));
     setResults(matches)
   }, [title, level, parent_id])
-  
+
   const fetchMatches = async () => {
     const {
       title,
@@ -85,11 +85,24 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
   }, []);
 
   return (
-    <div className="p-2">
-      <div className="mb-2">
-        <div className="flex gap-1">
-          <input className="grow" type="text" onChange={handleChange} onKeyDown={fetchMatchesOnEnterPress} value={state.title} name="title" />
-          <select onChange={handleChange} value={state.level_id} name="level_id">
+    <div className="p-2 bg-gray-800 rounded-md shadow-md">
+      <div className="mb-4">
+        <div className="flex gap-2">
+          <input
+            className="w-full px-4 py-2 bg-gray-700 text-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            type="text"
+            onChange={handleChange}
+            onKeyDown={fetchMatchesOnEnterPress}
+            value={state.title}
+            name="title"
+            placeholder="Search..."
+          />
+          <select
+            className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={handleChange}
+            value={state.level_id}
+            name="level_id"
+          >
             <option>Without Level</option>
             {levels.map((l) => (
               <option value={l.name} key={l.id.toString()}>
@@ -98,15 +111,24 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
             ))}
           </select>
         </div>
-        <div className="flex justify-between">
+        <div className="flex justify-between items-center mt-2">
           {!!parent_id && (
-            <div>
-              <input type="checkbox" onChange={handleChange} checked={state.useParent} name="useParent" />
-              <label htmlFor="useParent" className="text-xs">Look for matches within the mapped parent entity</label>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                onChange={handleChange}
+                checked={state.useParent}
+                name="useParent"
+                id="useParent"
+                className="mr-2 text-blue-500 focus:ring-blue-500"
+              />
+              <label htmlFor="useParent" className="text-xs text-gray-400">
+                Look for matches within the mapped parent entity
+              </label>
             </div>
           )}
           <button
-            className="text-white bg-gray-700 px-2 mt-1"
+            className="px-4 py-2 bg-amaranth text-white font-semibold rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
             type="button"
             onClick={fetchMatches}
           >
@@ -114,17 +136,20 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
           </button>
         </div>
       </div>
-      {results === null ? "" :
-        results.length === 0 ?
-          (<p className="text-sm text-gray-600 font-medium">No matches found for '{state.title}'.</p>)
-          : (
-            <MatchesTableView
-              matches={results}
-              match={match}
-              node="get_matches"
-              onSelect={onSelect}
-            />
-          )}
+      {results === null ? (
+        ""
+      ) : results.length === 0 ? (
+        <p className="text-sm text-gray-400">
+          No matches found for '{state.title}'.
+        </p>
+      ) : (
+        <MatchesTableView
+          matches={results}
+          match={match}
+          node="get_matches"
+          onSelect={onSelect}
+        />
+      )}
     </div>
   );
 };

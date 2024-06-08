@@ -14,14 +14,17 @@ export const MatchesTableView: FC<MatchesTableViewProps> = ({
   match,
   matches,
   onSelect = () => { },
-  className = "flex flex-col gap-2"
+  className = "flex flex-col gap-2",
 }) => (
-  <div className={className}>
+  <div className={`${className} bg-gray-800 rounded-md shadow-md`}>
     {matches.map((m) => (
       <div
         key={m.id.toString()}
         onClick={() => onSelect(m)}
-        className={match?.id === m.id ? "outline outline-offset-2 outline-blue-800" : ""}
+        className={`${match?.id === m.id
+            ? "bg-amaranth-stronger hover:bg-amaranth-stronger"
+            : "bg-gray-700 hover:bg-gray-600"
+          } rounded-md p-1 cursor-pointer transition-colors duration-200`}
       >
         <MatchListItem match={m} />
       </div>
