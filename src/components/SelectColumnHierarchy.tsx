@@ -78,8 +78,10 @@ export const SelectLGDLevel: FC<SelectLGDLevelProps> = ({
 }) => {
   const name = `lgdLevel${column}`;
   return (
-    <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500">
-      <label htmlFor={name} className="align-middle">{column}</label>
+    <div className="grid grid-cols-2 mb-1 justify-between border-b-2 border-dotted border-gray-500">
+      <label htmlFor={name} className="align-middle">
+        {column}
+      </label>
 
       <select
         name={name}
