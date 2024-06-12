@@ -63,6 +63,8 @@ function App() {
       console.log("built graph")
       setGraph(lgdGraph)
       toast.update(tid, { render: "Graph loaded", type: "success", isLoading: false, autoClose: 2000 })
+      // @ts-ignore
+      window.graph = graph;
     })()
   }, [file, lgdCols, hierarchy]);
 
@@ -73,22 +75,17 @@ function App() {
     let mappedGraph = await lgdMapInBatches(
       graph,
       Object.values(hierarchy).map(v => v.name),
-      100,
-      (n) => {
-        console.log(n);
-        setMappingProgress(n);
-      }
+      100
     );
     mappedGraph = computeUnmatchedChildren(mappedGraph);
     setGraph(mappedGraph.copy());
-    // @ts-ignore
-    window.graph = graph;
   }
 
   useEffect(() => {
     if (graph !== null) {
-      const count = countTotalUnmatchedChildren(graph);
-      setMappingProgress((graph.order - count)/ graph.order);
+      const c = countTotalUnmatchedChildren(graph)
+      console.log("unmatched children", c)
+      setMappingProgress((graph.order - c) / graph.order)
     }
   }, [graph])
 
