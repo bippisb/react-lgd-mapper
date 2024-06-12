@@ -12,8 +12,12 @@ const LEVELS = {
   "3": "district",
   "4": "sub district",
   "5": "block",
-  "6": "panchayat",
+  "6": "gram panchayat",
   "7": "village",
+  "8": "assembly constituency",
+  "9": "parliamentary constituency",
+  "10": "intermediate panchayat",
+  "11": "district panchayat",
 };
 
 const MatchListItem: FC<MatchListItemProps> = ({ match }) => (

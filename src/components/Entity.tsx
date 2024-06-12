@@ -16,7 +16,7 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
   const attrs = useMemo(() => graph.getNodeAttributes(node), [graph, node]);
   const parent_id = useMemo(() => getParentNodeId(node, graph), [graph, node]);
 
-  const setMatch = useMemo(() => async (match: ILGDMatch | undefined) => {
+  const setMatch = async (match: ILGDMatch | undefined) => {
     graph.mergeNodeAttributes(node, {
       match,
     });
@@ -31,13 +31,12 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
         graph.mergeNodeAttributes(parent, {
           unmatchedChildren: unmatchedChildren - 1,
         });
-
         parent = graph.inNeighbors(parent)[0];
       }
     } while (parent);
 
     setGraph(graph.copy());
-  }, [graph, node]);
+  };
 
 
   return (

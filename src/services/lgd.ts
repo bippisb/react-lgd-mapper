@@ -1,6 +1,7 @@
 import { DirectedGraph } from "graphology";
 import { getMatches, getBatchedMatches } from "../services/query";
 import { LevelName } from "../types";
+import { toast } from "react-toastify";
 
 
 export const getParentNode = (node: string, graph: DirectedGraph) => {
@@ -96,15 +97,15 @@ export const lgdMapInBatches = async (
     graph: DirectedGraph,
     levelNames: LevelName[],
     batchSize = 100,
-    onProgress: (percentage: number) => void = () => { }
 ) => {
     const nodeIsOfLevel = (l: LevelName) => (n: string) => {
         const attrs = graph.getNodeAttributes(n);
         return attrs.level_name === l && !attrs?.matches;
     }
     console.log("inbaches")
-    let nFetched = 0;
+    const tid = toast.loading("Mapping...");
     for (const levelName of levelNames) {
+        toast.update(tid, { render: `Mapping ${levelName}...`, type: "info" });
         console.log(levelName)
         const nodes = graph.filterNodes(nodeIsOfLevel(levelName));
         for (let i = 0; i < nodes.length; i += batchSize) {
@@ -128,10 +129,9 @@ export const lgdMapInBatches = async (
                     match: m?.filter(i => i?.match_type !== "fuzzy")?.length === 1 ? m[0] : undefined,
                 });
             }
-            nFetched = i + batch.length;
-            onProgress(nFetched / graph.order);
         }
     }
+    toast.update(tid, { render: `Finished mapping`, type: "success", isLoading: false, autoClose: 2000 });
 
     return graph;
 }

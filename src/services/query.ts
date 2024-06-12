@@ -2,6 +2,7 @@ import Fuse, { IFuseOptions } from "fuse.js";
 import { getDuckDB } from "./duckdb"
 import { lookUpCommunityReportedVariation } from "../api";
 import { castPossibleBigIntToNumber } from "./utils";
+import { toast } from "react-toastify";
 
 const runQuery = async (q: string) => {
     const db = await getDuckDB();
@@ -17,11 +18,11 @@ export const getExactMatch = async (name: string, levelId: BigInt | number | nul
     SELECT entity.id, entity.name, entity.code, entity.level_id, 'exact' AS match_type
     FROM entity 
     ${parentId !== null ? "JOIN adminhierarchy ON adminhierarchy.child_id = entity.id" : ""}
-    WHERE entity.name = '${name}'
+    WHERE entity.name = $$${name}$$
     ${levelId !== null ? `AND entity.level_id = ${levelId.toString()}` : ""}
     ${parentId !== null ? `AND adminhierarchy.entity_id = ${parentId.toString()}` : ""}
     `
-
+    
     const results = await runQuery(q);
     return results;
 }
@@ -39,7 +40,7 @@ export const getMatchesUsingVariations = async (name: string, levelId: BigInt | 
     FROM ${table}
     JOIN entity ON entity.id = ${table}.entity_id
     ${parentId !== null ? "JOIN adminhierarchy ON adminhierarchy.child_id = entity.id" : ""}
-    WHERE ${table}.name = '${name}'
+    WHERE ${table}.name = $$${name}$$
     ${levelId !== null ? `AND entity.level_id = ${levelId.toString()}` : ""}
     ${parentId !== null ? `AND adminhierarchy.entity_id = ${parentId.toString()}` : ""}
     `
@@ -119,29 +120,34 @@ export const getMatches = async (name: string, levelId: BigInt | number | null =
             return r
         }))
     }
-
-    name = name.trim().toLowerCase();
-    let matches = await getExactMatch(name, levelId, parentId);
-    if (matches.length > 0) {
-        return await prepResponse(matches);
-    }
-
-    matches = await getMatchesUsingVariations(name, levelId, parentId, useCommunityVariations)
-    if (matches.length > 0) {
-        return await prepResponse(matches);
-    }
-
-    matches = await lookUpCommunityReportedVariation(name, castPossibleBigIntToNumber(levelId), castPossibleBigIntToNumber(parentId));
-    if (matches.length) {
-        return await prepResponse(matches);
-    }
-    if (parentId === null) {
+    try {
+        name = name.trim().toLowerCase();
+        let matches = await getExactMatch(name, levelId, parentId);
+        if (matches.length > 0) {
+            return await prepResponse(matches);
+        }
+    
+        matches = await getMatchesUsingVariations(name, levelId, parentId, useCommunityVariations)
+        if (matches.length > 0) {
+            return await prepResponse(matches);
+        }
+    
+        matches = await lookUpCommunityReportedVariation(name, castPossibleBigIntToNumber(levelId), castPossibleBigIntToNumber(parentId));
+        if (matches.length) {
+            return await prepResponse(matches);
+        }
+        if (parentId === null) {
+            return [];
+        }
+    
+        matches = await getFuzzyMatches(name, parentId);
+        return await prepResponse(matches);        
+    } catch (error) {
+        toast.error("Error looking up matches for " + name);
+        console.error(error);
         return [];
     }
-
-    matches = await getFuzzyMatches(name, parentId);
-    return await prepResponse(matches);
-}
+    }
 
 export const getBatchedMatches = async (payload: any[]) => {
     return await Promise.all(payload.map(v => {
