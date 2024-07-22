@@ -88,6 +88,24 @@ export const getImmediateChildren = async (entityId: BigInt | number) => {
     return results;
 }
 
+export const getEntitySiblings = async (entityId: BigInt | number) => {
+    const q = `
+    WITH parent AS (
+        SELECT entity_id
+        FROM adminhierarchy
+        WHERE child_id = ${entityId.toString()}
+    )
+    SELECT DISTINCT e.*
+    FROM entity e
+    INNER JOIN adminhierarchy ah ON e.id = ah.child_id
+    INNER JOIN parent p ON ah.entity_id = p.entity_id
+    WHERE e.id != ${entityId.toString()};
+    `;
+    
+    const results = await runQuery(q);
+    return results;
+}
+
 export const getFuzzyMatches = async (name: string, parentId: BigInt | number) => {
     name = name.trim().toLowerCase().replace("&", "and");
     const children = await getImmediateChildren(parentId);

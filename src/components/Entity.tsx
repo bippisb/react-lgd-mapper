@@ -1,10 +1,13 @@
 import { DirectedGraph } from "graphology";
-import { FC, useMemo } from "react";
+import { FC, useEffect, useMemo, useState } from "react";
 import { ILGDMatch } from "../types";
 import { GetLGDMatchComponent } from "./GetLGDMatch";
 import { getParentNodeId, remapEntities } from "../services/lgd";
 import MatchListItem from "./MatchListItem";
 import { AddVariation } from "./AddVariation";
+import { getEntitySiblings, getImmediateChildren } from "../services/query";
+import { MatchesTableView } from "./MatchesTableView";
+import { Accordion } from "./Accordion";
 
 interface EntityViewProps {
   setGraph: (g: DirectedGraph) => void;
@@ -12,9 +15,34 @@ interface EntityViewProps {
   node: string;
 }
 
+const sortArrayOfObjectsByProperty = (arr: object[], property: string) => {
+  return arr.sort((a, b) => {
+    // @ts-ignore
+    a = a[property].toUpperCase() as string;
+    // @ts-ignore
+    b = b[property].toUpperCase() as string;
+    if (a < b) return -1;
+    if (a > b) return 1;
+    return 0;
+  });
+};
+
 export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
   const attrs = useMemo(() => graph.getNodeAttributes(node), [graph, node]);
   const parent_id = useMemo(() => getParentNodeId(node, graph), [graph, node]);
+  const [children, setChildren] = useState<null | any[]>(null);
+  const [siblings, setSiblings] = useState<null | any[]>(null);
+
+  useEffect(() => {
+    if (attrs?.match) {
+      getImmediateChildren(attrs.match.id).then((children) => {
+        setChildren(sortArrayOfObjectsByProperty(children, "name"));
+      })
+      getEntitySiblings(attrs.match.id).then((siblings) => {
+        setSiblings(sortArrayOfObjectsByProperty(siblings, "name"));
+      })
+    }
+  }, [graph, node]);
 
   const setMatch = async (match: ILGDMatch | undefined) => {
     graph.mergeNodeAttributes(node, {
@@ -76,6 +104,30 @@ export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
           </div>
         </div>
       )}
+      {
+        children && (
+          <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
+
+            <Accordion title={`Immediate Children of ${attrs.level_name} '${attrs.title}'`}>
+              <div className="max-h-72 h-fit overflow-auto">
+                <MatchesTableView matches={children} />
+              </div>
+            </Accordion>
+          </div>
+        )
+      }
+      {
+        siblings && (
+          <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
+
+            <Accordion title={`Siblings of ${attrs.level_name} '${attrs.title}'`}>
+              <div className="max-h-72 h-fit overflow-auto">
+                <MatchesTableView matches={siblings} />
+              </div>
+            </Accordion>
+          </div>
+        )
+      }
     </div>
   );
 };

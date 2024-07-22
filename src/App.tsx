@@ -172,7 +172,7 @@ function App() {
                       className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
                       onClick={startMapping}
                     >
-                      Fetch Matches
+                      Fetch Mat  ches
                     </button>
                   </div>
                   <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
