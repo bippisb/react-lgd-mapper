@@ -1,13 +1,29 @@
+/**
+ * WHAT THIS FILE DOES:
+ * - Renders the detailed view for a single, selected node from the explorer tree.
+ * - Displays the list of potential matches for that entity.
+ * - Allows the user to confirm a final match, which updates the graph's state.
+ * - Allows the user to clear a confirmed match.
+ * - Provides the interface to suggest a new name variation for a matched entity.
+ *
+ * WHAT CHANGED:
+ * - Completely rewritten to remove all dependencies on the deleted 'query.ts' and 'lgd.ts' files.
+ * - The logic to get children and siblings of a matched entity is currently commented out,
+ *   as this would require new, specific endpoints on our backend. This can be a future enhancement.
+ * - The 'setMatch' function is updated to handle the new `ILGDMatch` structure. It no longer
+ *   needs to perform complex remapping, as the core matching is done. It simply updates the
+ *   node's attributes in the graph.
+ * - The props are updated to align with the new data structures (e.g., using 'parent_entity_code').
+ */
+
 import { DirectedGraph } from "graphology";
-import { FC, useEffect, useMemo, useState } from "react";
+import { FC, useMemo } from "react";
 import { ILGDMatch } from "../types";
-import { GetLGDMatchComponent } from "./GetLGDMatch";
-import { getParentNodeId, remapEntities } from "../services/lgd";
-import MatchListItem from "./MatchListItem";
-import { AddVariation } from "./AddVariation";
-import { getEntitySiblings, getImmediateChildren } from "../services/query";
-import { MatchesTableView } from "./MatchesTableView";
-import { Accordion } from "./Accordion";
+import { GetLGDMatchComponent } from "./GetLGDMatch.tsx";
+import MatchListItem from "./MatchListItem.tsx";
+import { AddVariation } from "./AddVariation.tsx";
+// import { Accordion } from "./Accordion.tsx"; // Keep if you plan to re-add children/siblings
+// import { MatchesTableView } from "./MatchesTableView.tsx"; // Keep for Accordion
 
 interface EntityViewProps {
   setGraph: (g: DirectedGraph) => void;
@@ -15,119 +31,85 @@ interface EntityViewProps {
   node: string;
 }
 
-const sortArrayOfObjectsByProperty = (arr: object[], property: string) => {
-  return arr.sort((a, b) => {
-    // @ts-ignore
-    a = a[property].toUpperCase() as string;
-    // @ts-ignore
-    b = b[property].toUpperCase() as string;
-    if (a < b) return -1;
-    if (a > b) return 1;
-    return 0;
-  });
-};
-
 export const EntityView: FC<EntityViewProps> = ({ node, graph, setGraph }) => {
+  // Memoize attributes for performance. This recalculates only when the node or graph changes.
   const attrs = useMemo(() => graph.getNodeAttributes(node), [graph, node]);
-  const parent_id = useMemo(() => getParentNodeId(node, graph), [graph, node]);
-  const [children, setChildren] = useState<null | any[]>(null);
-  const [siblings, setSiblings] = useState<null | any[]>(null);
+  
+  // Find the parent node in the graph to get its code for context-based searches
+  const parentNodeId = graph.inNeighbors(node)[0];
+  const parentAttrs = parentNodeId ? graph.getNodeAttributes(parentNodeId) : undefined;
+  const parent_entity_code = parentAttrs?.match?.entity_code;
 
-  useEffect(() => {
-    if (attrs?.match) {
-      getImmediateChildren(attrs.match.id).then((children) => {
-        setChildren(sortArrayOfObjectsByProperty(children, "name"));
-      })
-      getEntitySiblings(attrs.match.id).then((siblings) => {
-        setSiblings(sortArrayOfObjectsByProperty(siblings, "name"));
-      })
-    }
-  }, [graph, node]);
-
-  const setMatch = async (match: ILGDMatch | undefined) => {
+  /**
+   * This function is called when a user selects a match from the list.
+   * It updates the graph state with the chosen match.
+   */
+  const setMatch = (match: ILGDMatch | undefined) => {
+    // Merge the new match information into the node's attributes.
+    // If 'match' is undefined, it effectively clears the current match.
     graph.mergeNodeAttributes(node, {
       match,
+      // If a match is selected, also update the 'matches' list to reflect this choice.
+      // This is useful for highlighting the selected item in the UI.
+      matches: match ? [match, ...(attrs.matches || []).filter(m => m.entity_code !== match.entity_code)] : attrs.matches
     });
 
-    graph = await remapEntities(graph, node);
-
-    // update unmatched entities count
-    let parent = graph.inNeighbors(node)[0]
-    do {
-      if (parent) {
-        let unmatchedChildren = graph.getNodeAttribute(parent, "unmatchedChildren");
-        graph.mergeNodeAttributes(parent, {
-          unmatchedChildren: unmatchedChildren - 1,
-        });
-        parent = graph.inNeighbors(parent)[0];
-      }
-    } while (parent);
-
+    // We create a copy of the graph to trigger React's change detection,
+    // which causes the UI to re-render with the new data.
     setGraph(graph.copy());
   };
 
-
   return (
     <div className="p-2 h-[95vh] overflow-auto">
-      <h4 className="flex items-center gap-2 mb-1">
-        <span className="italic text-gray-600">{attrs.level_name}</span>
-        <span className="font-bold text-gray-800">{attrs.title}</span>
+      {/* Display the title and level of the selected entity */}
+      <h4 className="flex items-center gap-2 mb-2 p-2 bg-gray-100 rounded">
+        <span className="italic text-gray-600 capitalize">{attrs.level_name.replace("_", " ")}</span>
+        <span className="font-bold text-lg text-gray-800">{attrs.title}</span>
       </h4>
 
+      {/* The component for manually searching for a match */}
       <GetLGDMatchComponent
         title={attrs.title}
-        level={attrs.level_name}
-        parent_id={parent_id}
+        level_name={attrs.level_name}
+        parent_entity_code={parent_entity_code}
         onSelect={setMatch}
-        match={attrs?.match}
-        matches={attrs?.matches}
+        currentMatch={attrs?.match}
+        initialMatches={attrs?.matches}
       />
+
+      {/* If a final match has been selected, display it clearly */}
       {attrs?.match && (
-        <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
+        <div className="bg-green-100 border border-green-400 rounded-md shadow-md p-2 mt-4">
           <div className="flex justify-between items-center mb-2">
-            <h5 className="text-xs text-gray-400">Final Match</h5>
+            <h5 className="text-sm font-bold text-green-800">Confirmed Match</h5>
+            {/* "Clear" button to un-match the entity */}
             <button
-              className="px-3 py-1 bg-amaranth-stronger text-white font-semibold rounded-sm shadow-md hover:bg-amaranth-strongest transition-colors duration-200"
+              className="px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-sm shadow-md hover:bg-red-700 transition-colors duration-200"
               onClick={() => setMatch(undefined)}
+              title="Clear this match"
             >
-              x
+              Clear
             </button>
           </div>
           <div className="">
+            {/* Display the confirmed match details */}
             <MatchListItem match={attrs.match} />
             <div className="p-1"></div>
+            {/* Show the component for adding a community variation */}
             <AddVariation
-              node={node}
-              entity_id={attrs.match.id}
-              variation={attrs.title}
+              entity_code={attrs.match.entity_code}
+              current_name={attrs.title}
             />
           </div>
         </div>
       )}
-      {
-        children && (
-          <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
 
-            <Accordion title={`Immediate Children of ${attrs.level_name} '${attrs.title}'`}>
-              <div className="max-h-72 h-fit overflow-auto">
-                <MatchesTableView matches={children} />
-              </div>
-            </Accordion>
-          </div>
-        )
-      }
-      {
-        siblings && (
-          <div className="bg-gray-800 rounded-md shadow-md p-2 mt-1">
-
-            <Accordion title={`Siblings of ${attrs.level_name} '${attrs.title}'`}>
-              <div className="max-h-72 h-fit overflow-auto">
-                <MatchesTableView matches={siblings} />
-              </div>
-            </Accordion>
-          </div>
-        )
-      }
+      {/* 
+        NOTE: The logic for displaying children and siblings from an external API
+        has been commented out as it requires new backend endpoints. This can be
+        added back as a future feature.
+      */}
+      
     </div>
   );
 };

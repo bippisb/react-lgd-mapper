@@ -1,38 +1,32 @@
-declare global {
-    var dfd: any;
-}
+/**
+ * WHAT CHANGED:
+ * - This file is simplified to align with the new backend API response.
+ * - ILGDMatch now includes the crucial 'confidence_score' and 'match_type'.
+ * - It expects 'entity_code' as the stable identifier from the backend.
+ * - Removed obsolete interfaces related to the old client-side graph.
+ */
 
-export {}
-
-export interface LGDNodeAttributes {
-    level_id: number;
-    title: string;
-    code?: string;
-    match?:ILGDMatch;
-    matches?: ILGDMatch[];
-    unmatchedChildren?: number;
+export interface ILGDLevel {
+    id: number;
+    name: string;
+    code: number;
 }
 
 export interface ILGDMatch {
-    code: BigInt; // entity's LGD code
-    id: BigInt; // entity id
-    name: string; // entity name
-    level_id: BigInt; // level id
-    level: string; // level name
-    parents?: ILGDMatch[];
-    match_type?: string;
-    score?: number; // fuzzy score
+    entity_code: number;
+    name: string;
+    level_id: number;
+    level?: string; // Sometimes provided for convenience
+    parents?: ILGDMatch[]; // The backend can still provide parent context if needed
+    
+    // Core new fields from the backend's matching engine
+    confidence_score: number;
+    match_type: 'exact' | 'fuzzy' | 'variation';
 }
 
-export interface ILGDLevel {
+// Defines the shape of an item sent to the backend for matching
+export interface MatchRequestItem {
     name: string;
-    id: BigInt;
-}
-
-export type LevelName = "india" | "state" | "district" | "sub_district" | "block" | "panchayat";
-
-export interface MatchItem {
-    name: string;
-    level?: LevelName;
-    parent_id?: number;
+    level_id?: number;
+    parent_entity_code?: number;
 }

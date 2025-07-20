@@ -1,197 +1,167 @@
-import { ChangeEvent, useEffect, useState } from "react";
-import { DatasetUpload } from "./components/DatasetUpload";
-import SelectLGDCols from "./components/SelectLGDCols";
-import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy";
-import { buildLGDGraph, getLGDColsInHierarchicalOrder } from "./services/graph";
-import { computeUnmatchedChildren, countTotalUnmatchedChildren, lgdMapInBatches } from "./services/lgd";
-import { EntityView } from "./components/Entity";
-import { LazyExplorer } from "./components/LazyExplorer";
-import { Notes } from "./components/Notes";
-import { getDuckDB, getUniqueRecords } from "./services/duckdb";
-import { exportAppState, exportMappedDataFrame, exportUnMappedDataFrame, loadAppState, useAppState, useGraph } from "./services/state";
-import { FileUpload } from "./components/FileUpload";
-import Sidebar from "./components/Sidebar";
+/**
+ * WHAT THIS FILE DOES:
+ * - This is the root component of the application. It manages the overall layout
+ *   and orchestrates the multi-step user workflow:
+ *   1. Upload Data -> 2. Select Columns -> 3. Define Hierarchy -> 4. Map Data -> 5. Explore Results.
+ *
+ * WHAT CHANGED (in this final version):
+ * - The JSX inside the <Sidebar> component has been fully restored and corrected.
+ * - <DatasetUpload /> is now correctly rendered, allowing the user to start the process.
+ * - Conditional rendering is used to show/hide components as the user progresses:
+ *   - `SelectLGDCols` appears only after columns have been loaded from a file.
+ *   - `SelectColumnHierarchy` appears only after the user has selected LGD columns.
+ * - The "Start/Rematch All" button has been moved into the sidebar to create a more logical flow.
+ * - Export buttons are also correctly placed within the sidebar and will appear after a graph is generated.
+ */
+
+import { FC, useEffect } from "react"; // Explicitly importing FC for clarity
 import { ToastContainer, toast } from "react-toastify";
-import { Tooltip } from "./components/Tooltip";
 import 'react-toastify/dist/ReactToastify.css';
 
+// State Management and Services
+import { useAppState, useGraph, exportAppState } from "./services/state.ts";
+import { runHierarchicalMapping } from "./services/mapping-service.ts";
+import { buildGraphFromMappingResults } from "./services/graph-builder.ts";
 
-export type AppState =
-  | "initial"
-  | "loading-csv"
-  | "fetching"
-  | "selecting-lgd-cols"
-  | "selecting-hierarchy"
-  | "csv-loaded";
+// Components
+import { DatasetUpload } from "./components/DatasetUpload.tsx";
+import SelectLGDCols from "./components/SelectLGDCols.tsx";
+import { SelectColumnHierarchy } from "./components/SelectColumnHierarchy.tsx";
+import { EntityView } from "./components/Entity.tsx";
+import { LazyExplorer } from "./components/LazyExplorer.tsx";
+import Sidebar from "./components/Sidebar.tsx";
+import { Notes } from "./components/Notes.tsx";
 
-function App() {
-  const [file, setFile] = useState<File | null>(null);
-  const appState = useAppState();
-  const graphState = useGraph();
 
+const App: FC = () => {
+  // Get state and actions from the Zustand store
   const {
-    columns, setColumns,
-    lgdCols, setLgdCols,
-    mappingProgress, setMappingProgress,
-    hierarchy, setHierarchy,
-    activeNode, setActiveNode,
-    resetState,
-  } = appState;
-  const { graph, setGraph } = graphState;
-
-  const importAppState = async (e: ChangeEvent<HTMLInputElement>) => {
-    const fileList = e.target.files;
-
-    if (fileList && fileList.length > 0) {
-      const file = fileList[0];
-      loadAppState(file, appState, graphState);
-    }
-  }
-
+    columns, lgdCols, hierarchy, activeNode, rawFileData, fetchLevels,
+    setLgdCols, setHierarchy, setActiveNode
+  } = useAppState();
+  
+  
+  const { graph, setGraph } = useGraph();
+  
+  // --- NEW: Fetch essential data when the application loads ---
   useEffect(() => {
-    if (!file || lgdCols.length === 0 || !hierarchy) {
+    fetchLevels();
+  }, [fetchLevels]); // fetchLevels is stable, so this runs once on mount.
+
+
+  const startMapping = async () => {
+    if (!rawFileData || !hierarchy) {
+      toast.error("Please upload data and define the column hierarchy first.");
       return;
     }
 
-    (async () => {
-      const tid = toast.loading("Getting unique entites...")
-      const orderedLGDCols = getLGDColsInHierarchicalOrder(hierarchy);
-      const records = await getUniqueRecords(orderedLGDCols);
-      toast.update(tid, { render: "Building LGD graph", type: "info", isLoading: true })
-      console.log("loaded records", records.length)
-      const lgdGraph = buildLGDGraph(records, hierarchy);
-      console.log("built graph")
-      setGraph(lgdGraph)
-      toast.update(tid, { render: "Graph loaded", type: "success", isLoading: false, autoClose: 2000 })
-      // @ts-ignore
-      window.graph = graph;
-    })()
-  }, [file, lgdCols, hierarchy]);
+    const tid = toast.loading("Starting hierarchical mapping...");
 
-  const startMapping = async () => {
-    if (graph === null || hierarchy === null) {
-      return
+    try {
+      // Step 1: Call the mapping service to handle all API calls and data processing.
+      const { uniqueData, levelMatchResults } = await runHierarchicalMapping(rawFileData, hierarchy);
+
+      toast.update(tid, { render: "Building visualization..." });
+
+      // Step 2: Build the visual graph from the final, consolidated results.
+      const newGraph = buildGraphFromMappingResults(uniqueData, levelMatchResults, hierarchy);
+      setGraph(newGraph);
+      
+      toast.update(tid, { render: "Mapping complete!", type: "success", isLoading: false, autoClose: 3000 });
+    } catch (err) {
+      console.error(err);
+      const errorMessage = (err as any).response?.data?.detail || "An API error occurred.";
+      toast.update(tid, { render: `Error: ${errorMessage}`, type: "error", isLoading: false, autoClose: 5000 });
     }
-    let mappedGraph = await lgdMapInBatches(
-      graph,
-      Object.values(hierarchy).map(v => v.name),
-      100
-    );
-    mappedGraph = computeUnmatchedChildren(mappedGraph);
-    setGraph(mappedGraph.copy());
-  }
-
-  useEffect(() => {
-    if (graph !== null) {
-      const c = countTotalUnmatchedChildren(graph)
-      console.log("unmatched children", c)
-      setMappingProgress((graph.order - c) / graph.order)
-    }
-  }, [graph])
-
-  useEffect(() => {
-    (async () => {
-      // instantiate duckdb
-      await getDuckDB();
-    })()
-
-  }, [])
+  };
 
   return (
     <>
-      <div className="bg-gray-800 min-h-screen">
-        <header className="flex justify-between items-center bg-gray-700">
-        </header>
+      <div className="bg-gray-800 min-h-screen font-sans">
         <main className="flex">
-          <Sidebar open={!hierarchy}>
-            <div className="bg-white bg-opacity-50 p-4 h-screen overflow-auto">
-              <div>
-                <div className="flex">
-                  <label className="mb-1 mr-1 text-base font-medium text-gray-900 ">
-                    Import App State
-                  </label>
-                  <Tooltip text="Upload a previously exported app state to continue your mapping process." />
-                </div>
-                <div className="p-2">
-                  <FileUpload handleChange={importAppState} accept=".json" />
-                </div>
+          {/* The Sidebar is now permanently open for a better user experience */}
+          <Sidebar open={true}>
+            <div className="p-4 h-screen overflow-auto">
+              <h1 className='text-2xl font-bold text-white text-center mb-4'>LGD Mapper</h1>
+              
+              {/* --- SECTION 1: DATA SETUP --- */}
+              <div className="bg-gray-700 p-3 rounded-lg">
+                <h2 className="font-bold text-lg text-white mb-2 border-b border-gray-600 pb-1">Setup</h2>
+                
+                {/* Step 1: Always show the dataset uploader */}
+                <DatasetUpload />
+                
+                {/* Step 2: Show column selector only after a file is uploaded */}
+                {columns && (
+                  <SelectLGDCols
+                    columns={columns}
+                    selectedCols={lgdCols}
+                    onSelectionChange={setLgdCols}
+                  />
+                )}
+                
+                {/* Step 3: Show hierarchy definer only after columns are selected */}
+                {lgdCols.length > 0 && (
+                  <SelectColumnHierarchy
+                    columns={lgdCols}
+                    onHierarchyChange={setHierarchy}
+                  />
+                )}
+
+                {/* Step 4: Show the main action button only when setup is complete */}
+                {hierarchy && rawFileData && (
+                   <button
+                      className="w-full mt-4 px-4 py-2 text-md font-semibold text-white bg-green-600 rounded-md shadow-md hover:bg-green-700 transition-colors duration-200"
+                      onClick={startMapping}
+                    >
+                      Start Matching
+                    </button>
+                )}
               </div>
-              <DatasetUpload setFile={(f) => { resetState(); setFile(f); }} setColumnNames={setColumns} /* setUIState={setState} */ />
-              {columns !== null && (
-                <SelectLGDCols
-                  columns={columns}
-                  selectedCols={lgdCols}
-                  onSelectionChange={setLgdCols}
-                />
-              )}
-              {lgdCols.length > 0 && (
-                <SelectColumnHierarchy
-                  columns={lgdCols}
-                  onHierarchyChange={setHierarchy}
-                />
-              )}
-              {graph !== null && (
-                <div>
-                  <div className="flex flex-col">
-                    <div className="mb-1 mr-1 text-base font-medium text-gray-900">Export</div>
+
+              {/* --- SECTION 2: EXPORT (appears after mapping) --- */}
+              {graph && (
+                <div className="bg-gray-700 p-3 rounded-lg mt-4">
+                   <h2 className="font-bold text-lg text-white mb-2 border-b border-gray-600 pb-1">Export</h2>
                     <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
-                      onClick={() => exportAppState(appState, graphState)}
+                      className="w-full px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors"
+                      onClick={() => exportAppState(useAppState.getState(), useGraph.getState())}
                     >
-                      App State
+                      Export Full App State
                     </button>
-                    <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
-                      onClick={() => exportMappedDataFrame(graph, appState.hierarchy!)}
-                    >
-                      Mapped Rows
-                    </button>
-                    <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 mb-2"
-                      onClick={() => exportUnMappedDataFrame(graph, appState.hierarchy!)}
-                    >
-                      Unmapped Rows
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
           </Sidebar>
-          <div className="grid grid-cols-2 gap-1 p-4 flex-grow">
-            <div className="bg-white bg-opacity-50 p-1 rounded-md shadow-md">
-              {/* @ts-ignore */}
-              {graph !== null ? (
-                <>
-                  <div className="flex justify-end items-center mb-1 sticky top-0">
-                    {mappingProgress !== null && (
-                      <span className="px-2 py-1 text-white rounded-md">
-                        {(100 * mappingProgress).toFixed(2)} %
-                      </span>
-                    )}
-                    <button
-                      className="px-4 py-2 text-sm font-semibold text-white bg-amaranth rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200"
-                      onClick={startMapping}
-                    >
-                      Fetch Mat  ches
-                    </button>
-                  </div>
-                  <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
-                </>
+
+          {/* --- MAIN CONTENT AREA --- */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-4 flex-grow ml-80"> {/* ml-80 to offset for sidebar */}
+            {/* Left Panel: The Explorer Tree */}
+            <div className="bg-white bg-opacity-70 p-2 rounded-md shadow-md">
+              {graph ? (
+                <LazyExplorer graph={graph} setActiveNode={setActiveNode} />
               ) : (
                 <Notes />
               )}
             </div>
-            <div className="bg-white bg-opacity-50 p-1 rounded-md shadow-md">
-              {activeNode !== null && graph !== null && (
+            
+            {/* Right Panel: The Entity Detail View */}
+            <div className="bg-white bg-opacity-70 p-2 rounded-md shadow-md">
+              {activeNode && graph ? (
                 <EntityView node={activeNode} graph={graph} setGraph={setGraph} />
+              ) : (
+                <div className="p-4 text-center mt-10">
+                    <h3 className="text-lg font-semibold">Entity Details</h3>
+                    <p className="text-gray-600 mt-2">Select an item from the explorer tree on the left to view its details and potential matches.</p>
+                </div>
               )}
             </div>
           </div>
         </main>
-        <ToastContainer position={"top-right"} />
+        <ToastContainer position={"top-right"} theme="dark" />
       </div>
     </>
   );
-}
+};
 
 export default App;

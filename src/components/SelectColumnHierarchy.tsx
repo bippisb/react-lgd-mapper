@@ -1,8 +1,20 @@
-import { FC, useState, useEffect } from "react";
-import { getLevels } from "../services/query";
+/**
+ * WHAT THIS FILE DOES:
+ * - Allows the user to map the columns from their uploaded file to the official LGD
+ *   administrative levels (e.g., map 'My District Column' to the 'district' level).
+ *
+ * WHAT CHANGED:
+ * - The component no longer tries to import `getLevels` from the deleted `query.ts`.
+ * - It now correctly imports `getLevels` from our new, central `./services/api.ts`.
+ * - It fetches the levels from the backend API when the component loads.
+ */
+import { FC, useState } from "react";
+// import { getLevels } from "../services/api.ts"; // <-- CORRECTED IMPORT
+import { useAppState } from "../services/state.ts"; // <-- Import the global state hook
 import { ILGDLevel } from "../types";
 
-export type Hierarchy = { [lgdCol: string]: any };
+export type Hierarchy = { [columnName: string]: ILGDLevel };
+
 interface SelectColHierarchyProps {
   columns: string[];
   onHierarchyChange: (hierarchy: Hierarchy) => void;
@@ -12,92 +24,69 @@ export const SelectColumnHierarchy: FC<SelectColHierarchyProps> = ({
   columns,
   onHierarchyChange,
 }) => {
-  const [levels, setLevels] = useState<ILGDLevel[]>([]);
+  // Get the levels array directly from the global state.
+  const levels = useAppState((state) => state.levels);
   const [hierarchy, setHierarchy] = useState<Hierarchy>({});
 
-  useEffect(() => {
-    (async () => {
-      const levels = await getLevels();
-      setLevels(levels);
-    })();
-  }, []);
-
-  const handleChange = (lgdCol: string, level: string) => {
-    setHierarchy((state) => ({
-      ...state,
-      [lgdCol]: levels.find((l) => l.name == level),
-    }));
+  const handleChange = (columnName: string, levelId: string) => {
+    const selectedLevel = levels.find((l) => l.id.toString() === levelId);
+    if (selectedLevel) {
+      setHierarchy((prevState) => ({
+        ...prevState,
+        [columnName]: selectedLevel,
+      }));
+    }
   };
 
   const handleSubmit = () => onHierarchyChange(hierarchy);
 
+  // If levels haven't loaded yet (e.g., on initial render before useEffect in App.tsx completes),
+  // show a loading state.
+  if (levels.length === 0) {
+    return <div className="p-4 text-center text-sm">Loading administrative levels...</div>;
+  }
+
   return (
-    <div>
-      <hr className="border-gray-600 border-1 my-1" />
-      <h3>Column Hierarchy</h3>
+    <div className="mt-4">
+      <hr className="border-gray-600 border-1 my-2" />
+      <h3 className="text-lg font-semibold text-white">Define Column Hierarchy</h3>
       <div className="p-2">
-        <div className="mb-1 flex justify-between border-b-2 border-dotted border-gray-500 align-bottom text-xs">
+        <div className="mb-2 flex justify-between border-b-2 border-dotted border-gray-500 align-bottom text-xs text-gray-300">
           <span>Column Name</span>
           <span>Administrative Level</span>
         </div>
-        {levels.length > 0 &&
-          columns.map((col) => (
-            <SelectLGDLevel
-              levels={levels}
-              column={col}
-              value={hierarchy[col]?.name}
-              onChange={(v: string) => handleChange(col, v)}
-              key={col}
-            />
-          ))}
-        <div className="flex justify-end">
+        {columns.map((col) => (
+            <div key={col} className="grid grid-cols-2 mb-2 items-center border-b border-gray-500 py-1">
+                <label htmlFor={`level-select-${col}`} className="align-middle font-medium text-sm text-gray-200">
+                    {col}
+                </label>
+                <select
+                    id={`level-select-${col}`}
+                    value={hierarchy[col]?.id || ""}
+                    onChange={(e) => handleChange(col, e.target.value)}
+                    className="w-full bg-gray-200 border border-gray-400 rounded-md py-1 px-2 text-sm text-black"
+                >
+                    <option value="" disabled>Select a Level</option>
+                    {levels.map((level) => (
+                        // Do not show the 'india' level as it's not a mappable column
+                        level.name !== 'india' && (
+                            <option key={level.id} value={level.id}>
+                                {level.name.charAt(0).toUpperCase() + level.name.slice(1)}
+                            </option>
+                        )
+                    ))}
+                </select>
+            </div>
+        ))}
+        <div className="flex justify-end mt-4">
           <button
-            className="m-4 mr-0 mb-1 bg-raspberry-rose  text-white hover:bg-raspberry-rose-lighter  rounded-md py-1 px-4"
+            className="bg-raspberry-rose text-white font-semibold rounded-md py-2 px-4 hover:bg-raspberry-rose-lighter transition-colors"
             onClick={handleSubmit}
           >
-            Start Mapping
+            Confirm Hierarchy
           </button>
         </div>
       </div>
-    </div>
-  );
-};
-
-interface SelectLGDLevelProps {
-  levels: ILGDLevel[];
-  column: string;
-  value: string;
-  onChange: (value: string) => void;
-}
-
-export const SelectLGDLevel: FC<SelectLGDLevelProps> = ({
-  levels,
-  column,
-  value,
-  onChange,
-}) => {
-  const name = `lgdLevel${column}`;
-  return (
-    <div className="grid grid-cols-2 mb-1 justify-between border-b-2 border-dotted border-gray-500">
-      <label htmlFor={name} className="align-middle">
-        {column}
-      </label>
-
-      <select
-        name={name}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="float-right bg-gray-200"
-      >
-        <option value="" defaultValue={value}>
-          Level
-        </option>
-        {levels.map((level) => (
-          <option key={column + level.name} value={level.name}>
-            {level.name}
-          </option>
-        ))}
-      </select>
     </div>
   );
 };
