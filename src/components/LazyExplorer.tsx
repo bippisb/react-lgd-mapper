@@ -1,25 +1,14 @@
-/**
- * WHAT THIS FILE DOES:
- * - Renders the expandable tree view of the LGD hierarchy on the left side of the main view.
- * - It uses recursion to render nodes and their children.
- *
- * WHAT CHANGED:
- * - The import for 'getRootNodes' is updated. It no longer points to the deleted 'graph.ts'
- *   but to our new, consolidated 'graph-builder.ts' service file.
- */
 import { FC, useMemo, useState } from "react";
-// CORRECTED IMPORT PATH
 import { getRootNodes } from "../services/graph-builder.ts";
 import type { DirectedGraph } from "graphology";
+import { ILGDMatch } from "../types";
 
-// Defining props locally to make the component self-contained
 interface ExplorerProps {
     graph: DirectedGraph;
     setActiveNode: (node: string) => void;
 }
 
 export const LazyExplorer: FC<ExplorerProps> = ({ graph, setActiveNode }) => {
-    // Memoize the root nodes so this isn't recalculated on every render
     const rootNodes = useMemo(() => getRootNodes(graph), [graph]);
 
     return (
@@ -44,6 +33,15 @@ interface LazyExplorerItemProps extends ExplorerProps {
     node: string;
 }
 
+// NEW: Helper function to determine text color based on match confidence
+const getConfidenceColor = (match?: ILGDMatch): string => {
+    if (!match) return "text-red-400"; // Unmatched
+    if (match.confidence_score > 0.9) return "text-green-300"; // High confidence
+    if (match.confidence_score > 0.7) return "text-yellow-300"; // Medium confidence
+    return "text-orange-400"; // Low confidence
+};
+
+
 export const LazyExplorerItem: FC<LazyExplorerItemProps> = ({
     node,
     graph,
@@ -57,35 +55,34 @@ export const LazyExplorerItem: FC<LazyExplorerItemProps> = ({
         setActiveNode(node);
     };
 
+    const textColor = getConfidenceColor(attrs?.match);
+    const matchTypeText = attrs?.match ? `${(attrs.match.confidence_score * 100).toFixed(0)}%` : "Unmatched";
+
+
     return (
         <div className="border-b border-gray-700 last:border-none">
             <div className="flex justify-between items-center py-2">
                 <span
                     onClick={handleClick}
-                    className={`cursor-pointer ${
-                        attrs?.match ? "text-green-300" : "text-amber-400"
-                    }`}
+                    className={`cursor-pointer font-medium ${textColor}`}
                 >
                     {attrs.title || "<NA>"}
                 </span>
-                <div className="flex items-center">
+                <div className="flex items-center gap-2">
+                    <span className={`text-xs font-mono p-1 rounded ${textColor} bg-black bg-opacity-20`}>
+                        {matchTypeText}
+                    </span>
+
                     {attrs?.matches?.length > 1 && !attrs.match && (
-                        <span className="inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-blue-600 bg-blue-100 rounded-full" title="Multiple possible matches found">
+                        <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-blue-600 bg-blue-100 rounded-full" title="Multiple possible matches found">
                             {attrs.matches.length}
                         </span>
                     )}
-                    
-                    {/* This can be uncommented once child-counting logic is re-implemented */}
-                    {/* {attrs?.unmatchedChildren > 0 && (
-                        <span className="inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-rose-600 bg-rose-100 rounded-full">
-                            {String(attrs?.unmatchedChildren).padStart(2, "0")}
-                        </span>
-                    )} */}
 
                     {neighbors.length > 0 && (
                         <button
                             onClick={() => setOpen((state) => !state)}
-                            className="text-gray-400 hover:text-gray-200 transition-colors duration-200"
+                            className="text-gray-400 hover:text-gray-200"
                         >
                             {open ? "▼" : "▶"}
                         </button>

@@ -19,9 +19,11 @@ export const MatchesTableView: FC<MatchesTableViewProps> = ({
   <div className={`${className} bg-gray-800 rounded-md shadow-md`}>
     {matches.map((m) => (
       <div
-        key={m.id.toString()}
+        // MODIFIED: Changed m.id to m.entity_code
+        key={m.entity_code.toString()}
         onClick={() => onSelect(m)}
-        className={`${match?.id === m.id
+        // MODIFIED: Changed match?.id and m.id to use .entity_code
+        className={`${match?.entity_code === m.entity_code
             ? "bg-amaranth-stronger hover:bg-amaranth-stronger"
             : "bg-gray-700 hover:bg-gray-600"
           } rounded-md p-1 cursor-pointer transition-colors duration-200`}
