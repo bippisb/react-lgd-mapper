@@ -1,32 +1,25 @@
 /**
  * WHAT THIS FILE DOES:
  * - Provides a search interface for a user to manually find a match for a single entity.
- * - It's used when the automated batch process fails or returns multiple options.
- *
- * WHAT CHANGED:
- * - Completely rewritten to remove all dependencies on the deleted 'query.ts' file.
- * - It now uses the 'getBatchedMatches' function from our new 'api.ts' service.
- *   (We reuse the batch endpoint for simplicity, just sending a single item).
- * - The component's internal state ('ComponentFormState') is simplified.
- * - It passes the user's search query and filters directly to the backend API.
  */
 import { ChangeEvent, FC, KeyboardEvent, useEffect, useState } from "react";
 import { ILGDLevel, ILGDMatch, MatchRequestItem } from "../types";
 import { MatchesTableView } from "./MatchesTableView";
-import { getBatchedMatches, getLevels } from "../services/api"; // <-- CORRECTED IMPORT
+import { getBatchedMatches, getLevels } from "../services/api";
+import { toast } from "react-toastify"; // FIXED: Added missing toast import
 
 interface GetLGDMatchComponentProps {
-  parent_entity_code: number | undefined; // Parent's stable LGD code
-  level_name: string; // The name of the level (e.g., 'district')
-  title: string;      // The name of the entity being searched for
+  parent_entity_code: number | undefined;
+  level_name: string;
+  title: string;
   onSelect: (m: ILGDMatch) => void;
-  currentMatch?: ILGDMatch; // The currently selected match, if any
-  initialMatches?: ILGDMatch[]; // The list of potential matches from the batch process
+  currentMatch?: ILGDMatch;
+  initialMatches?: ILGDMatch[];
 }
 
 interface ComponentFormState {
   useParent: boolean;
-  level_id: string; // Holds the ID of the selected level
+  level_id: string;
   title: string;
 }
 
@@ -38,12 +31,10 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
   currentMatch,
   initialMatches = [],
 }) => {
-  // --- STATE MANAGEMENT ---
   const [results, setResults] = useState<ILGDMatch[]>(initialMatches);
   const [levels, setLevels] = useState<ILGDLevel[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Find the initial level ID from the full list of levels
   const initialLevelId = levels.find(l => l.name === level_name)?.id.toString() || '';
 
   const [state, setState] = useState<ComponentFormState>({
@@ -52,14 +43,10 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     useParent: !!parent_entity_code,
   });
 
-  // --- DATA FETCHING ---
-  // Fetch the list of possible levels when the component first loads
   useEffect(() => {
     getLevels().then(setLevels);
   }, []);
   
-  // When the component's props change (e.g., user selects a new node),
-  // update the internal state to reflect the new entity.
   useEffect(() => {
     setState({
       title,
@@ -69,8 +56,6 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     setResults(initialMatches);
   }, [title, level_name, parent_entity_code, initialMatches, levels]);
 
-
-  // --- EVENT HANDLERS ---
   const fetchMatches = async () => {
     setIsLoading(true);
     
@@ -81,9 +66,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     };
     
     try {
-      // Use the API service to get matches, sending a batch of 1
       const response = await getBatchedMatches([requestItem]);
-      // The backend returns a 2D array, so we take the first element
       setResults(response[0] || []);
     } catch (error) {
       console.error("Failed to fetch matches:", error);
@@ -113,12 +96,10 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
     }
   };
 
-  // --- RENDER ---
   return (
     <div className="p-2 bg-gray-800 rounded-md shadow-md">
       <div className="mb-4">
         <div className="flex gap-2">
-          {/* Search Input */}
           <input
             className="w-full px-4 py-2 bg-gray-700 text-gray-200 rounded-md placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             type="text"
@@ -128,7 +109,6 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
             name="title"
             placeholder="Search..."
           />
-          {/* Level Selection Dropdown */}
           <select
             className="px-4 py-2 bg-gray-700 text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             onChange={handleChange}
@@ -144,7 +124,6 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
           </select>
         </div>
         <div className="flex justify-between items-center mt-2">
-          {/* Parent Context Checkbox */}
           {parent_entity_code !== undefined && (
             <div className="flex items-center">
               <input
@@ -160,7 +139,6 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
               </label>
             </div>
           )}
-          {/* Find Button */}
           <button
             className="px-4 py-2 bg-amaranth text-white font-semibold rounded-md shadow-md hover:bg-amaranth-stronger transition-colors duration-200 disabled:bg-gray-500"
             type="button"
@@ -172,7 +150,6 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
         </div>
       </div>
       
-      {/* Results Display */}
       {results.length === 0 && !isLoading ? (
         <p className="text-sm text-center text-gray-400 p-4">
           No matches found for '{state.title}'.
@@ -180,7 +157,7 @@ export const GetLGDMatchComponent: FC<GetLGDMatchComponentProps> = ({
       ) : (
         <MatchesTableView
           matches={results}
-          currentMatch={currentMatch}
+          match={currentMatch} // FIXED: Renamed prop from 'currentMatch' to 'match'
           onSelect={onSelect}
         />
       )}

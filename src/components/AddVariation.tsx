@@ -1,14 +1,9 @@
 /**
  * WHAT THIS FILE DOES:
  * - A simple form for a user to suggest a new name variation for a confirmed match.
- *
- * WHAT CHANGED:
- * - Props updated to accept 'entity_code' (the stable LGD code) instead of the old 'entity_id'.
- * - The 'handleSubmit' function now calls our new 'api.ts' service.
- * - Renamed 'variation' prop to 'current_name' to be clearer.
  */
-import { ChangeEvent, FC, useEffect, useState } from "react";
-import { addVariation } from "../services/api.ts"; // Corrected import
+import { FC, useEffect, useState } from "react"; // FIXED: Removed unused 'ChangeEvent'
+import { addVariation } from "../services/api.ts";
 import { toast } from "react-toastify";
 
 interface AddVariationProps {
